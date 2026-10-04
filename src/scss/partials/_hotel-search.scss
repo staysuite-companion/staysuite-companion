@@ -1,0 +1,25 @@
+/* ---------- Hotel search results ---------- */
+
+.ssc-hotel-search {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 16px;
+}
+
+.ssc-hotel-search-title {
+    margin: 0 0 24px;
+    font-size: 28px;
+    line-height: 1.3;
+}
+
+.ssc-hotel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* Breathing room below the results on the advanced search page. The
+   container is theme markup shared by both modes, so this only adds air. */
+#listing_ajax_container {
+    margin-bottom: 48px;
+}

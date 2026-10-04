@@ -2,36 +2,38 @@
 
 /* ---------- Hero pages (body.ssc-has-hero) ---------- */
 
-/* No theme map on hero pages — the cover replaces it. */
-body.ssc-has-hero .header_media #gmap_wrapper {
-    display: none !important;
-}
+body.ssc-has-hero {
+    /* No theme map on hero pages — the cover replaces it. */
+    .header_media #gmap_wrapper {
+        display: none !important;
+    }
 
-/* No theme header search on hero pages — the hero renders it. */
-body.ssc-has-hero #search_wrapper {
-    display: none !important;
-}
+    /* No theme header search on hero pages — the hero renders it. */
+    #search_wrapper {
+        display: none !important;
+    }
 
-/* No theme mobile search on hero pages either. header_media prints its own
-   mobile toggle bar (#adv-search-header-mobile) plus collapsible form, which
-   the #search_wrapper rule above does not cover. It duplicates the hero's
-   search and slides under the transparent overlay header, overlapping the
-   logo — so hide both wherever the hero block is present. */
-body.ssc-has-hero #adv-search-header-mobile,
-body.ssc-has-hero #adv-search-mobile {
-    display: none !important;
-}
+    /* No theme mobile search on hero pages either. header_media prints its own
+       mobile toggle bar (#adv-search-header-mobile) plus collapsible form, which
+       the #search_wrapper rule above does not cover. It duplicates the hero's
+       search and slides under the transparent overlay header, overlapping the
+       logo — so hide both wherever the hero block is present. */
+    #adv-search-header-mobile,
+    #adv-search-mobile {
+        display: none !important;
+    }
 
-/* Full-width content, no sidebar on hero pages. */
-body.ssc-has-hero #post > div[class*="col-"] {
-    width: 100% !important;
-    max-width: 100% !important;
-    flex: 0 0 100% !important;
-    float: none !important;
-}
+    /* Full-width content, no sidebar on hero pages. */
+    #post > div[class*="col-"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+        float: none !important;
+    }
 
-body.ssc-has-hero #primary.widget-area-sidebar {
-    display: none !important;
+    #primary.widget-area-sidebar {
+        display: none !important;
+    }
 }
 
 /* Constrain hero content width. The full-bleed pull-up and cover height
@@ -46,98 +48,100 @@ body.ssc-has-hero #primary.widget-area-sidebar {
 
 /* Theme search as one independent combined pill card on the cover:
    borderless segments with dividers, circular icon submit. */
-.ssc-hero .advanced_search_form_wrapper {
-    max-height: none;
-    background: #fff;
-    border: 0;
-    border-radius: 999px;
-    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
-    padding: 6px 6px 6px 8px;
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 0;
-    align-items: stretch;
-    overflow: hidden;
-}
+.ssc-hero {
+    .advanced_search_form_wrapper {
+        max-height: none;
+        background: #fff;
+        border: 0;
+        border-radius: 999px;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+        padding: 6px 6px 6px 8px;
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0;
+        align-items: stretch;
+        overflow: hidden;
 
-.ssc-hero .advanced_search_form_wrapper > div {
-    float: none !important;
-    width: auto !important;
-    max-width: none !important;
-    margin: 0 !important;
-    padding: 10px 18px !important;
-    border: 0;
-    border-right: 1px solid #edf0f2;
-    min-width: 0;
-}
+        > div {
+            float: none !important;
+            width: auto !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 10px 18px !important;
+            border: 0;
+            border-right: 1px solid #edf0f2;
+            min-width: 0;
 
-.ssc-hero .advanced_search_form_wrapper > div:last-child {
-    border-right: 0;
-}
+            &:last-child {
+                border-right: 0;
+            }
 
-/* Nested boxes (guest dropdown etc.) go borderless inside the pill. */
-.ssc-hero .advanced_search_form_wrapper > div div {
-    border: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-}
+            /* Nested boxes (guest dropdown etc.) go borderless inside the pill. */
+            div {
+                border: 0 !important;
+                background: transparent !important;
+                box-shadow: none !important;
+            }
+        }
 
-.ssc-hero .advanced_search_form_wrapper input[type="text"],
-.ssc-hero .advanced_search_form_wrapper input[type="number"],
-.ssc-hero .advanced_search_form_wrapper select {
-    border: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    height: 46px;
-    padding: 8px 10px 8px 40px;
-    font-size: 15px;
-    width: 100%;
-    color: #333;
-}
+        input[type="text"],
+        input[type="number"],
+        select {
+            border: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            height: 46px;
+            padding: 8px 10px 8px 40px;
+            font-size: 15px;
+            width: 100%;
+            color: #333;
+        }
 
-.ssc-hero .advanced_search_form_wrapper input:focus,
-.ssc-hero .advanced_search_form_wrapper select:focus {
-    outline: none !important;
-    box-shadow: none !important;
-    border: 0 !important;
-}
+        input:focus,
+        select:focus {
+            outline: none !important;
+            box-shadow: none !important;
+            border: 0 !important;
+        }
 
-.ssc-hero .advanced_search_form_wrapper > div:has(input[name="submit"]) {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 6px 0 0 !important;
-}
+        > div:has(input[name="submit"]) {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 6px 0 0 !important;
+        }
 
-.ssc-hero .advanced_search_form_wrapper .advanced_search_submit_button {
-    font-size: 0 !important;
-    color: transparent !important;
-    width: 58px !important;
-    height: 58px !important;
-    min-height: 0 !important;
-    border-radius: 50% !important;
-    border: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    cursor: pointer;
-    background: var(--ssc-accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.3-4.3'/%3E%3C/svg%3E") center/24px no-repeat !important;
-}
+        .advanced_search_submit_button {
+            font-size: 0 !important;
+            color: transparent !important;
+            width: 58px !important;
+            height: 58px !important;
+            min-height: 0 !important;
+            border-radius: 50% !important;
+            border: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            cursor: pointer;
+            background: var(--ssc-accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.3-4.3'/%3E%3C/svg%3E") center/24px no-repeat !important;
 
-.ssc-hero .advanced_search_form_wrapper .advanced_search_submit_button:hover {
-    background-color: var(--ssc-accent-hover) !important;
-}
+            &:hover {
+                background-color: var(--ssc-accent-hover) !important;
+            }
+        }
+    }
 
-.ssc-hero .ssc-mode {
-    margin-bottom: 14px;
-    text-align: center;
-}
+    .ssc-mode {
+        margin-bottom: 14px;
+        text-align: center;
+    }
 
-.ssc-hero .ssc-mode-toggle {
-    display: inline-flex;
-}
+    .ssc-mode-toggle {
+        display: inline-flex;
+    }
 
-.ssc-hero .ssc-mode-form {
-    text-align: left;
+    .ssc-mode-form {
+        text-align: left;
+    }
 }
 
 /* No backdrop on the homepage cover — text floats on the image. Scoped to
@@ -160,7 +164,7 @@ body.ssc-homepage .ssc-hero-subtitle,
    in-flow card pushes following sections down. */
 .ssc-mode-form-outside {
     max-width: 1200px;
-    margin: -150px auto 0;
+    margin: -150px auto 80px;
     padding-left: 15px;
     padding-right: 15px;
     position: relative;
@@ -169,50 +173,58 @@ body.ssc-homepage .ssc-hero-subtitle,
 
 /* Group mode: the theme search becomes the top section — its own
    Search button is redundant next to Get quote. */
-.ssc-group-active input[name="submit"] {
-    display: none !important;
-}
+.ssc-group-active {
+    input[name="submit"] {
+        display: none !important;
+    }
 
-.ssc-group-active .advanced_search_submit_button,
-.ssc-group-active button[name="submit"] {
-    display: none !important;
-}
+    .advanced_search_submit_button,
+    button[name="submit"] {
+        display: none !important;
+    }
 
-.ssc-group-active .advanced_search_form_wrapper > div:has(input[name="submit"]) {
-    display: none !important;
-}
+    .advanced_search_form_wrapper > div:has(input[name="submit"]) {
+        display: none !important;
+    }
 
-.ssc-group-active .elemenentor_submit_wrapper {
-    display: none !important;
-}
+    .elemenentor_submit_wrapper {
+        display: none !important;
+    }
 
-.ssc-group-active .advanced_search_form_wrapper {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+    .advanced_search_form_wrapper {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+    }
 }
 
 /* Grid children must shrink below content width (mobile overflow). */
-.ssc-hero .advanced_search_form_wrapper > div {
-    min-width: 0;
+.ssc-hero {
+    .advanced_search_form_wrapper > div {
+        min-width: 0;
+    }
 }
 
 /* Clear the absolute overlay header. */
-body.ssc-homepage .ssc-hero-inner {
-    padding-top: 120px;
+body.ssc-homepage {
+    .ssc-hero-inner {
+        padding-top: 120px;
+    }
 }
 
 @media (max-width: bp.$bp-sm) {
-    .ssc-hero .advanced_search_form_wrapper {
-        grid-template-columns: 1fr !important;
-        border-radius: 24px;
-    }
+    .ssc-hero {
+        .advanced_search_form_wrapper {
+            grid-template-columns: 1fr !important;
+            border-radius: 24px;
+        }
 
-    .ssc-hero .advanced_search_form_wrapper > div {
-        border-right: 0;
-        border-bottom: 1px solid #edf0f2;
-    }
+        .advanced_search_form_wrapper > div {
+            border-right: 0;
+            border-bottom: 1px solid #edf0f2;
+        }
 
-    .ssc-hero .advanced_search_form_wrapper > div:last-child {
-        border-bottom: 0;
+        .advanced_search_form_wrapper > div:last-child {
+            border-bottom: 0;
+        }
     }
 }
 
@@ -221,205 +233,278 @@ body.ssc-homepage .ssc-hero-inner {
    via --ssc-submit/--ssc-submit-hover/--ssc-search-icon. Elementor only
    compiles style-tab CSS for editor-placed widgets, so our programmatic
    instance carries its styling here. */
-.ssc-hero .search_wr_elementor {
-    background: #fff;
-    border: 0;
-    border-radius: 58px;
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.14), 0 0 0 10px rgba(19, 118, 153, 0.16), 0 0 50px 14px rgba(19, 118, 153, 0.38);
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.14), 0 0 0 10px color-mix(in srgb, var(--ssc-submit, #137699) 18%, transparent), 0 0 50px 14px color-mix(in srgb, var(--ssc-submit, #137699) 42%, transparent);
-    padding: 8px;
-}
+.ssc-hero {
+    .search_wr_elementor {
+        background: #fff;
+        border: 0;
+        border-radius: 58px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.14), 0 0 0 10px rgba(19, 118, 153, 0.16), 0 0 50px 14px rgba(19, 118, 153, 0.38);
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.14), 0 0 0 10px color-mix(in srgb, var(--ssc-submit, #137699) 18%, transparent), 0 0 50px 14px color-mix(in srgb, var(--ssc-submit, #137699) 42%, transparent);
+        padding: 8px;
 
-.ssc-hero .search_wr_elementor .wpestate-adv-holder {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    margin: 0;
-}
+        .wpestate-adv-holder {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            margin: 0;
+        }
 
-.ssc-hero .search_wr_elementor .elementor-field-group {
-    border: 0 !important;
-    border-right: 1px solid #ececec !important;
-    background: transparent !important;
-    background-color: transparent !important;
-    box-shadow: none !important;
-    margin: 0;
-    padding: 7px 34px 7px 41px;
-    min-width: 0;
-}
+        .elementor-field-group {
+            border: 0 !important;
+            border-right: 1px solid #ececec !important;
+            background: transparent !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            margin: 0;
+            padding: 7px 34px 7px 41px;
+            min-width: 0;
 
-.ssc-hero .search_wr_elementor .elementor-field-group:last-child {
-    border-right: 0 !important;
-}
+            &:last-child {
+                border-right: 0 !important;
+            }
+        }
 
-/* Elementor's frontend stylesheet never loads for our programmatic
-   instance (rendered at the_content, after wp_enqueue_scripts), so the
-   hero owns the layout primitives Elementor normally provides: hidden
-   labels, border-box columns, fixed proportional widths. */
-.ssc-hero .search_wr_elementor .elementor-field-label {
-    display: none !important;
-}
+        /* Elementor's frontend stylesheet never loads for our programmatic
+           instance (rendered at the_content, after wp_enqueue_scripts), so the
+           hero owns the layout primitives Elementor normally provides: hidden
+           labels, border-box columns, fixed proportional widths. */
+        .elementor-field-label {
+            display: none !important;
+        }
 
-.ssc-hero .search_wr_elementor .wpestate-adv-holder {
-    flex-wrap: nowrap;
-}
+        .wpestate-adv-holder {
+            flex-wrap: nowrap;
+        }
 
-.ssc-hero .search_wr_elementor .elementor-field-group {
-    box-sizing: border-box;
-}
+        .elementor-field-group {
+            box-sizing: border-box;
+        }
 
-.ssc-hero .search_wr_elementor .elementor-col-30 {
-    flex: 0 0 30%;
-    max-width: 30%;
-}
+        .elementor-col-30 {
+            flex: 0 0 30%;
+            max-width: 30%;
+        }
 
-.ssc-hero .search_wr_elementor .elementor-col-20 {
-    flex: 0 0 20%;
-    max-width: 20%;
-}
+        .elementor-col-20 {
+            flex: 0 0 20%;
+            max-width: 20%;
+        }
 
-.ssc-hero .search_wr_elementor .elementor-col-10 {
-    flex: 0 0 10%;
-    max-width: 10%;
-}
+        .elementor-col-10 {
+            flex: 0 0 10%;
+            max-width: 10%;
+        }
 
-/* The submit cell carries the divider class but a trailing node defeats
-   :last-child — strip its divider explicitly. */
-.ssc-hero .search_wr_elementor .elemenentor_submit_wrapper {
-    border: 0 !important;
+        /* The submit cell carries the divider class but a trailing node defeats
+           :last-child — strip its divider explicitly. */
+        .elemenentor_submit_wrapper {
+            border: 0 !important;
+        }
+    }
 }
 
 /* Field icons need explicit sizes: neither Elementor nor theme CSS
    loads for programmatic instances (editor iframe especially), so
    unsized SVGs would blow up to container width. */
-.ssc-hero .search_wr_elementor .elementor_search_builder_field_wrapper svg,
-.ssc-hero .search_wr_elementor .elementor_search_builder_field_wrapper img,
-.ssc-hotel-search .search_wr_elementor .elementor_search_builder_field_wrapper svg,
-.ssc-hotel-search .search_wr_elementor .elementor_search_builder_field_wrapper img {
+// Kept flat: these selectors span the hero and hotel-search scopes, and
+// nesting would split them into separate compiled rules.
+.ssc-hero .search_wr_elementor .elementor_search_builder_field_wrapper > svg,
+.ssc-hero .search_wr_elementor .elementor_search_builder_field_wrapper > img,
+.ssc-hotel-search .search_wr_elementor .elementor_search_builder_field_wrapper > svg,
+.ssc-hotel-search .search_wr_elementor .elementor_search_builder_field_wrapper > img {
     width: 20px !important;
     height: 20px !important;
     flex-shrink: 0;
 }
 
-.ssc-hero .search_wr_elementor .elementor_search_builder_field_wrapper i,
-.ssc-hotel-search .search_wr_elementor .elementor_search_builder_field_wrapper i {
+.ssc-hero .search_wr_elementor .elementor_search_builder_field_wrapper > i,
+.ssc-hotel-search .search_wr_elementor .elementor_search_builder_field_wrapper > i {
     font-size: 20px;
-}
-.ssc-hero .search_wr_elementor svg {
-    fill: var(--ssc-search-icon, #137699) !important;
 }
 
 .ssc-hero .search_wr_elementor i {
-    color: var(--ssc-search-icon, #ef8557) !important;
+    color: var(--ssc-submit, #137699) !important;
+}
+
+/* Guests / room counter dropdown: inherits our white hero text. Pin it to the
+   theme's dark text so values inside the popup stay legible. */
+.ssc-hero .search_wr_elementor .wpestate_guest_no_buttons,
+.ssc-hotel-search .search_wr_elementor .wpestate_guest_no_buttons {
+    color: #484848;
+}
+
+.ssc-hero .search_wr_elementor .wpestate_guest_no_buttons .wpestate_guest_no_button_value,
+.ssc-hotel-search .search_wr_elementor .wpestate_guest_no_buttons .wpestate_guest_no_button_value {
+    color: #484848;
+}
+
+/* +/- steppers: render crisp inline icons, not scaled-up field icons. */
+.ssc-hero .search_wr_elementor .wpestate_guest_no_buttons svg,
+.ssc-hotel-search .search_wr_elementor .wpestate_guest_no_buttons svg,
+.ssc-hero .search_wr_elementor .wpestate_guest_no_buttons img,
+.ssc-hotel-search .search_wr_elementor .wpestate_guest_no_buttons img {
+    width: auto !important;
+    height: auto !important;
+    margin: 2px 0 0 8px;
+    fill: #5d6475;
+}
+
+.ssc-hero .search_wr_elementor .advanced_search_submit_button i,
+.ssc-hotel-search .search_wr_elementor .advanced_search_submit_button i {
+    color: #fff !important;
+}
+
+.ssc-hero .wpestate_guest_no_buttons .wpestate_guest_no_button_value,
+.ssc-hotel-search .wpestate_guest_no_buttons .wpestate_guest_no_button_value {
+    color: #484848;
+}
+
+.ssc-hero .wpestate_guest_no_buttons,
+.ssc-hotel-search .wpestate_guest_no_buttons {
+    color: #484848;
+}
+
+.ssc-hero .wpestate_guest_no_buttons svg,
+.ssc-hotel-search .wpestate_guest_no_buttons svg {
+    fill: #5d6475;
+}
+
+.ssc-hero .search_wr_elementor .advanced_search_submit_button i,
+.ssc-hotel-search .search_wr_elementor .advanced_search_submit_button i {
+    color: #fff !important;
 }
 
 /* Keep dropdowns above following sections. */
-.ssc-hero .ssc-elementor-search {
-    position: relative;
-    z-index: 60;
-}
+.ssc-hero {
+    .ssc-elementor-search {
+        position: relative;
+        z-index: 70;
+    }
 
-.ssc-hero .wpestate_guest_no_buttons {
-    z-index: 600 !important;
-}
+    .wpestate_guest_no_buttons {
+        z-index: 600 !important;
+    }
 
-.ssc-hero .search_wr_elementor .elementor-field {
-    border: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    color: #635e5e;
-    font-size: 16px;
-    height: 44px;
-    padding: 0;
-    width: 100%;
-}
+    .search_wr_elementor {
+        .elementor-field {
+            border: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            color: #635e5e;
+            font-size: 16px;
+            height: 44px;
+            padding: 0;
+            width: 100%;
+        }
 
-/* Bootstrap/Elementor put their own bordered boxes on these inner
-   controls (.form-control carries Bootstrap's border); strip them so
-   only the pill and hairline dividers show. The circular submit keeps
-   its own background via the more specific rule below. */
-.ssc-hero .search_wr_elementor .form-control:not(.advanced_search_submit_button),
-.ssc-hero .search_wr_elementor .elementor_search_builder_field_wrapper,
-.ssc-hero .search_wr_elementor .filter_menu_trigger,
-.ssc-hero .search_wr_elementor .btn:not(.advanced_search_submit_button),
-.ssc-hero .search_wr_elementor .dropdown-toggle,
-.ssc-hero .search_wr_elementor .wpestate-multiselect-custom-style {
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    background-color: transparent !important;
-    box-shadow: none !important;
-}
+        /* Bootstrap/Elementor put their own bordered boxes on these inner
+           controls (.form-control carries Bootstrap's border); strip them so
+           only the pill and hairline dividers show. The circular submit keeps
+           its own background via the more specific rule below. */
+        .form-control:not(.advanced_search_submit_button),
+        .elementor_search_builder_field_wrapper,
+        .filter_menu_trigger,
+        .btn:not(.advanced_search_submit_button),
+        .dropdown-toggle,
+        .wpestate-multiselect-custom-style {
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+        }
 
-.ssc-hero .search_wr_elementor .elementor-field:focus {
-    outline: none !important;
-    box-shadow: none !important;
-}
+        .elementor-field:focus {
+            outline: none !important;
+            box-shadow: none !important;
+        }
 
-.ssc-hero .search_wr_elementor .elemenentor_submit_wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 0 0 8px;
-}
+        .elemenentor_submit_wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 0 0 8px;
+        }
 
-.ssc-hero .search_wr_elementor .advanced_search_submit_button {
-    width: 58px;
-    height: 58px;
-    border-radius: 50% !important;
-    border: 0 !important;
-    background-color: var(--ssc-submit, #ef8557) !important;
-    color: #fff;
-    padding: 12px !important;
-    margin: 0 !important;
-    cursor: pointer;
-}
+        .advanced_search_submit_button {
+            width: 58px;
+            height: 58px;
+            border-radius: 50% !important;
+            border: 0 !important;
+            background-color: var(--ssc-submit, #ef8557) !important;
+            color: #fff;
+            padding: 12px !important;
+            margin: 0 !important;
+            cursor: pointer;
 
-.ssc-hero .search_wr_elementor .advanced_search_submit_button:hover {
-    background-color: var(--ssc-submit-hover, #f09167) !important;
-}
+            &:hover {
+                background-color: var(--ssc-submit-hover, #f09167) !important;
+            }
 
-.ssc-hero .search_wr_elementor .advanced_search_submit_button .elementor-icon {
-    display: block;
-    color: #fff;
-}
+            .elementor-icon {
+                display: block;
+                color: #fff;
+            }
+        }
 
-.ssc-hero .search_wr_elementor .elementor_search_builder_field_wrapper .elementor-icon {
-    color: var(--ssc-search-icon, #ef8557);
-}
+        .elementor_search_builder_field_wrapper .elementor-icon {
+            color: var(--ssc-submit, #137699) !important;
+        }
 
-.ssc-hero .search_wr_elementor .advanced_search_submit_button svg,
-.ssc-hero .search_wr_elementor .advanced_search_submit_button img {
-    width: 24px;
-    height: 24px;
-    display: block;
-    margin: auto;
+        .advanced_search_submit_button {
+            svg,
+            img {
+                width: 24px;
+                height: 24px;
+                display: block;
+                margin: auto;
+            }
+        }
+    }
 }
 
 @media (max-width: bp.$bp-sm) {
-    .ssc-hero .search_wr_elementor {
-        border-radius: 10px;
-        overflow: visible;
+    .ssc-mode-form-outside {
+        margin-top: -210px;
+        margin-bottom: 80px;
     }
+}
 
-    .ssc-hero .search_wr_elementor .wpestate-adv-holder {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 15px;
-    }
+@media (max-width: bp.$bp-sm) {
+    .ssc-hero {
+        .search_wr_elementor {
+            border-radius: 16px;
+            overflow: visible;
+            padding: 4px;
 
-    .ssc-hero .search_wr_elementor .elementor-field-group {
-        border: 0 !important;
-        border-radius: 50px;
-        flex: 0 0 auto;
-        width: 100% !important;
-        max-width: 100%;
-        min-width: 0;
-    }
+            .wpestate-adv-holder {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0;
+            }
 
-    .ssc-hero .search_wr_elementor .elementor-field,
-    .ssc-hero .search_wr_elementor input {
-        max-width: 100%;
+            .elementor-field-group {
+                border: 0 !important;
+                border-bottom: 1px solid #edf0f2 !important;
+                border-radius: 0;
+                flex: 0 0 auto;
+                width: 100% !important;
+                max-width: 100%;
+                min-width: 0;
+                padding: 10px 16px 10px 46px;
+
+                &:last-child {
+                    border-bottom: 0 !important;
+                }
+            }
+
+            .elementor-field,
+            input {
+                max-width: 100%;
+                height: 38px;
+                font-size: 14px;
+            }
+        }
     }
 }
 
@@ -436,13 +521,15 @@ body.ssc-homepage .ssc-hero-inner {
         justify-content: flex-start;
     }
 
-    body.ssc-homepage .ssc-hero.alignfull {
-        padding-top: 84px;
-        padding-bottom: 40px;
-    }
+    body.ssc-homepage {
+        .ssc-hero.alignfull {
+            padding-top: 84px;
+            padding-bottom: 40px;
+        }
 
-    body.ssc-homepage .ssc-hero-inner {
-        padding-top: 12px;
+        .ssc-hero-inner {
+            padding-top: 12px;
+        }
     }
 
     .ssc-hero-inner {
@@ -450,4 +537,3 @@ body.ssc-homepage .ssc-hero-inner {
         padding-right: 16px;
     }
 }
-

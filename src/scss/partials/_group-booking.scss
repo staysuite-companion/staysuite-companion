@@ -15,47 +15,48 @@
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 16px 18px;
     background: #fff;
+    border: 1px solid #e8ebee;
     border-radius: 18px;
     padding: 28px;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
-}
 
-.ssc-booking-form label {
-    display: flex;
-    flex-direction: column;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ssc-text);
-}
+    label {
+        display: flex;
+        flex-direction: column;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ssc-text);
+    }
 
-.ssc-booking-form input,
-.ssc-booking-form select,
-.ssc-booking-form textarea {
-    margin-top: 6px;
-    height: 48px;
-    border: 1px solid #e3e6ea;
-    border-radius: 12px;
-    padding: 0 14px;
-    font-size: 14px;
-    color: var(--ssc-text);
-    background: #fff;
-    width: 100%;
-    box-sizing: border-box;
-}
+    input,
+    select,
+    textarea {
+        margin-top: 6px;
+        height: 48px;
+        border: 1px solid #e3e6ea;
+        border-radius: 12px;
+        padding: 0 14px;
+        font-size: 14px;
+        color: var(--ssc-text);
+        background: #fff;
+        width: 100%;
+        box-sizing: border-box;
+    }
 
-.ssc-booking-form textarea {
-    height: auto;
-    min-height: 110px;
-    padding: 12px 14px;
-    resize: vertical;
-}
+    textarea {
+        height: auto;
+        min-height: 110px;
+        padding: 12px 14px;
+        resize: vertical;
+    }
 
-.ssc-booking-form input:focus,
-.ssc-booking-form select:focus,
-.ssc-booking-form textarea:focus {
-    outline: none;
-    border-color: var(--ssc-accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ssc-accent) 20%, transparent);
+    input:focus,
+    select:focus,
+    textarea:focus {
+        outline: none;
+        border-color: var(--ssc-accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--ssc-accent) 20%, transparent);
+    }
 }
 
 .ssc-booking-full {
@@ -74,19 +75,19 @@
     background: linear-gradient(90deg, var(--ssc-accent) 50%, var(--ssc-accent) 100%);
     cursor: pointer;
     transition: background 0.25s ease, transform 0.15s ease;
-}
 
-.ssc-booking-submit:hover:not(:disabled) {
-    background: var(--ssc-accent-hover);
-}
+    &:hover:not(:disabled) {
+        background: var(--ssc-accent-hover);
+    }
 
-.ssc-booking-submit:active:not(:disabled) {
-    transform: scale(0.98);
-}
+    &:active:not(:disabled) {
+        transform: scale(0.98);
+    }
 
-.ssc-booking-submit:disabled {
-    opacity: 0.65;
-    cursor: wait;
+    &:disabled {
+        opacity: 0.65;
+        cursor: wait;
+    }
 }
 
 .ssc-booking-error {
@@ -97,10 +98,10 @@
 
 .ssc-booking-results {
     margin-top: 26px;
-}
 
-.ssc-booking-results h3 {
-    color: var(--ssc-headings);
+    h3 {
+        color: var(--ssc-headings);
+    }
 }
 
 .ssc-booking-grid {
@@ -116,27 +117,27 @@
     background: #fff;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
 
-.ssc-booking-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
-}
+    &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+    }
 
-.ssc-booking-card img {
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
-    display: block;
-}
+    img {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        object-fit: cover;
+        display: block;
+    }
 
-.ssc-booking-card h4 {
-    margin: 12px 14px 4px;
-    font-size: 16px;
-}
+    h4 {
+        margin: 12px 14px 4px;
+        font-size: 16px;
 
-.ssc-booking-card h4 a {
-    color: var(--ssc-headings);
+        a {
+            color: var(--ssc-headings);
+        }
+    }
 }
 
 .ssc-booking-card-meta {
@@ -152,4 +153,3 @@
         padding: 20px;
     }
 }
-

@@ -13,11 +13,11 @@
     background: linear-gradient(to top, rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.15));
     color: #fff;
     padding: 60px 30px 30px;
-}
 
-.ssc-hotel-hero-inner h1 {
-    color: #fff;
-    margin: 0 0 8px;
+    h1 {
+        color: #fff;
+        margin: 0 0 8px;
+    }
 }
 
 .ssc-hotel-hero-meta {
@@ -46,29 +46,29 @@
     padding: 18px 20px;
     margin: 25px 0;
     background: #fafafa;
-}
 
-.ssc-hotel-box-label {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    opacity: 0.7;
-}
+    &-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        opacity: 0.7;
+    }
 
-.ssc-hotel-box-name {
-    font-size: 20px;
-    font-weight: 700;
-}
+    &-name {
+        font-size: 20px;
+        font-weight: 700;
+    }
 
-.ssc-hotel-box-meta {
-    margin-top: 4px;
-    font-size: 14px;
-}
+    &-meta {
+        margin-top: 4px;
+        font-size: 14px;
+    }
 
-.ssc-hotel-box-cta {
-    display: inline-block;
-    margin-top: 10px;
-    font-weight: 700;
+    &-cta {
+        display: inline-block;
+        margin-top: 10px;
+        font-weight: 700;
+    }
 }
 
 .ssc-hotel-link-wrap {
@@ -79,4 +79,3 @@
 .ssc-hotel-link {
     font-weight: 700;
 }
-

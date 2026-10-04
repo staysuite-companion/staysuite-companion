@@ -3,8 +3,10 @@
 /* ---------- Hotel single page ---------- */
 
 /* Our cover replaces the theme's map header on hotel pages. */
-.single-ssc_hotel .header_media {
-    display: none !important;
+.single-ssc_hotel {
+    .header_media {
+        display: none !important;
+    }
 }
 
 .ssc-hotel-page {
@@ -144,27 +146,26 @@
     gap: 4px;
     font-size: 13px;
     font-weight: 600;
-}
 
-.ssc-hotel-strip-field input,
-.ssc-hotel-strip-field select {
-    font-weight: 400;
-    height: 48px;
-    width: 100%;
-    border: 1px solid #d7dee3;
-    border-radius: 8px;
-    background-color: #fff;
-    padding: 0 12px;
-    font-size: 15px;
-    color: #333;
-    box-sizing: border-box;
-}
+    input,
+    select {
+        font-weight: 400;
+        height: 48px;
+        width: 100%;
+        border: 1px solid #d7dee3;
+        border-radius: 8px;
+        background-color: #fff;
+        padding: 0 12px;
+        font-size: 15px;
+        color: #333;
+        box-sizing: border-box;
 
-.ssc-hotel-strip-field input:focus,
-.ssc-hotel-strip-field select:focus {
-    outline: none;
-    border-color: var(--ssc-accent);
-    box-shadow: 0 0 0 3px rgba(19, 118, 153, 0.15);
+        &:focus {
+            outline: none;
+            border-color: var(--ssc-accent);
+            box-shadow: 0 0 0 3px rgba(19, 118, 153, 0.15);
+        }
+    }
 }
 
 .ssc-hotel-strip-submit {
@@ -176,10 +177,10 @@
     padding: 10px 22px;
     font-weight: 700;
     cursor: pointer;
-}
 
-.ssc-hotel-strip-submit:hover {
-    background: var(--ssc-accent-hover);
+    &:hover {
+        background: var(--ssc-accent-hover);
+    }
 }
 
 .ssc-hotel-rooms-title {
@@ -216,28 +217,28 @@
     position: relative;
     min-height: 220px;
     background: #eef2f4;
-}
 
-.ssc-room-media .carousel-inner .item img {
-    width: 100%;
-    height: 230px;
-    object-fit: cover;
-}
+    .carousel-inner .item img {
+        width: 100%;
+        height: 230px;
+        object-fit: cover;
+    }
 
-/* Price lives in the side panel — hide the slider's overlay duplicate. */
-.ssc-room-media .price_unit_wrapper,
-.ssc-room-media .price_unit {
-    display: none;
+    /* Price lives in the side panel — hide the slider's overlay duplicate. */
+    .price_unit_wrapper,
+    .price_unit {
+        display: none;
+    }
 }
 
 .ssc-room-title {
     margin: 0 0 8px;
     font-size: 19px;
-}
 
-.ssc-room-title a {
-    color: inherit;
-    text-decoration: none;
+    a {
+        color: inherit;
+        text-decoration: none;
+    }
 }
 
 .ssc-room-meta {
@@ -276,25 +277,25 @@
     padding: 0;
     font-size: 13px;
     color: var(--ssc-text);
-}
 
-.ssc-room-features li {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(215, 222, 227, 0.8);
-    border-radius: 999px;
-    padding: 4px 11px 4px 6px;
-}
+    li {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(215, 222, 227, 0.8);
+        border-radius: 999px;
+        padding: 4px 11px 4px 6px;
+    }
 
-.ssc-room-features img {
-    width: 20px;
-    height: 20px;
-    object-fit: contain;
-    background: #fff;
-    border-radius: 50%;
-    padding: 2px;
+    img {
+        width: 20px;
+        height: 20px;
+        object-fit: contain;
+        background: #fff;
+        border-radius: 50%;
+        padding: 2px;
+    }
 }
 
 .ssc-room-side {
@@ -334,15 +335,17 @@
     font-weight: 700;
     text-decoration: none;
     white-space: nowrap;
+
+    &:hover {
+        background: var(--ssc-accent-hover);
+        color: #fff !important;
+    }
 }
 
-.ssc-room-cta:hover {
-    background: var(--ssc-accent-hover);
-    color: #fff !important;
-}
-
-.ssc-hotel-page .property_page_container {
-    margin-bottom: 30px;
+.ssc-hotel-page {
+    .property_page_container {
+        margin-bottom: 30px;
+    }
 }
 
 .ssc-hotel-map-wrap {
@@ -390,4 +393,3 @@
         text-align: left;
     }
 }
-

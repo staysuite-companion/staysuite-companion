@@ -14,6 +14,8 @@
    cards run edge to edge and read as off-centre. Constrain them directly in
    that case so the sections centre themselves wherever the blocks are used.
    The hero is deliberately absent: it must stay full-bleed. */
+// Kept flat on purpose: the two scopes share one declaration block, and
+// nesting would split them into two rules in the compiled output.
 body:not(.ssc-homepage) .ssc-tablets,
 body:not(.ssc-homepage) .ssc-row,
 body:not(.ssc-homepage) .ssc-features,
@@ -32,15 +34,16 @@ body:not(.ssc-homepage) .ssc-payments,
 /* Hairline divider after each homepage section (hero excluded; the
    payment strip sits against the tinted footer, so it gets air, not a
    divider). */
-body.ssc-homepage .ssc-tablets,
-body.ssc-homepage .ssc-row,
-body.ssc-homepage .ssc-features {
-    border-bottom: 1px solid #e8ebee;
-    padding-bottom: 28px;
-    margin-bottom: 28px;
-}
+body.ssc-homepage {
+    .ssc-tablets,
+    .ssc-row,
+    .ssc-features {
+        border-bottom: 1px solid #e8ebee;
+        padding-bottom: 28px;
+        margin-bottom: 28px;
+    }
 
-body.ssc-homepage .ssc-payments {
-    margin-top: 40px;
+    .ssc-payments {
+        margin-top: 40px;
+    }
 }
-

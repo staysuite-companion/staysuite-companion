@@ -1,14 +1,17 @@
 /* Opt-outs from Settings: dividers and animations. */
-body.ssc-no-dividers.ssc-homepage .ssc-tablets,
-body.ssc-no-dividers.ssc-homepage .ssc-row,
-body.ssc-no-dividers.ssc-homepage .ssc-features,
-body.ssc-no-dividers.ssc-homepage .ssc-payments {
-    border-bottom: 0 !important;
-    padding-bottom: 0 !important;
+body.ssc-no-dividers.ssc-homepage {
+    .ssc-tablets,
+    .ssc-row,
+    .ssc-features,
+    .ssc-payments {
+        border-bottom: 0 !important;
+        padding-bottom: 0 !important;
+    }
 }
 
-body.ssc-no-animations .ssc-mode-form-outside,
-body.ssc-no-animations .ssc-mode-form-outside .ssc-mode-form {
-    transition: none !important;
+body.ssc-no-animations {
+    .ssc-mode-form-outside,
+    .ssc-mode-form-outside .ssc-mode-form {
+        transition: none !important;
+    }
 }
-

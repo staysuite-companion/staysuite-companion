@@ -14,20 +14,20 @@
     padding-bottom: 8px;
     scrollbar-width: none;
     -ms-overflow-style: none;
-}
 
-.ssc-carousel-track::-webkit-scrollbar {
-    display: none;
-}
+    &::-webkit-scrollbar {
+        display: none;
+    }
 
-.ssc-carousel-track > * {
-    flex: 0 0 280px;
-    max-width: 280px;
-    scroll-snap-align: start;
-}
+    > * {
+        flex: 0 0 280px;
+        max-width: 280px;
+        scroll-snap-align: start;
+    }
 
-.ssc-carousel-track .listing_wrapper {
-    width: 280px;
+    .listing_wrapper {
+        width: 280px;
+    }
 }
 
 /* A row with fewer cards than fit per view (five destinations, say) used to
@@ -36,11 +36,13 @@
    pseudo-items absorb that leftover space and centre the row; when the cards
    overflow the track the margins collapse to zero, so scrolling and the
    carousel arrows (which measure scrollWidth) behave exactly as before. */
-.ssc-tablets.ssc-carousel-track::before,
-.ssc-tablets.ssc-carousel-track::after {
-    content: '';
-    margin-left: auto;
-    margin-right: auto;
+.ssc-tablets.ssc-carousel-track {
+    &::before,
+    &::after {
+        content: '';
+        margin-left: auto;
+        margin-right: auto;
+    }
 }
 
 .ssc-carousel-nav {
@@ -77,12 +79,10 @@
     text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
     cursor: pointer;
     transition: color 0.2s ease, transform 0.2s ease;
-}
 
-.ssc-carousel-prev:hover,
-.ssc-carousel-next:hover {
-    color: var(--ssc-accent, #137699);
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-    transform: scale(1.08);
+    &:hover {
+        color: var(--ssc-accent, #137699);
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+        transform: scale(1.08);
+    }
 }
-

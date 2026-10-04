@@ -19,14 +19,16 @@
    the StaySuite Homepage template's transparent overlay header. The cover's
    proportions (below) are deliberately not tied to the template — see the
    .ssc-has-hero rule that follows. */
-body.ssc-homepage .ssc-hero.alignfull {
-    width: 100vw;
-    max-width: 100vw;
-    margin-left: calc(50% - 50vw);
-    margin-right: calc(50% - 50vw);
-    border-radius: 0;
-    padding-top: 120px;
-    padding-bottom: 120px;
+body.ssc-homepage {
+    .ssc-hero.alignfull {
+        width: 100vw;
+        max-width: 100vw;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        border-radius: 0;
+        padding-top: 120px;
+        padding-bottom: 120px;
+    }
 }
 
 /* A cover must read as a cover wherever the hero block is used. ssc-has-hero
@@ -75,10 +77,10 @@ body.ssc-homepage .ssc-hero.alignfull {
     display: flex;
     flex-direction: column;
     font-size: 13px;
-}
 
-.ssc-search-field input {
-    margin-top: 4px;
+    input {
+        margin-top: 4px;
+    }
 }
 
 .ssc-search-submit {
@@ -86,4 +88,3 @@ body.ssc-homepage .ssc-hero.alignfull {
     font-weight: 700;
     cursor: pointer;
 }
-

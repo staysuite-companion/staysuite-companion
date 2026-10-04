@@ -3,84 +3,90 @@
 /* ---------- Hotel search strip (theme widget, no location) ---------- */
 /* Theme-native boxed fields: Elementor's frontend CSS never loads for
    programmatic instances, so own the same primitives as the hero. */
-.ssc-hotel-search .search_wr_elementor {
-    background: #fff;
-    border: 1px solid #e8ebee;
-    border-radius: 12px;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
-    padding: 14px;
-    margin-bottom: 22px;
-}
-
-.ssc-hotel-search .search_wr_elementor .wpestate-adv-holder {
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: stretch;
-    gap: 10px;
-    margin: 0;
-}
-
-.ssc-hotel-search .elementor-field-label {
-    display: none !important;
-}
-
-.ssc-hotel-search .elementor-field-group {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    min-width: 0;
-}
-
-.ssc-hotel-search .elementor-col-30 {
-    flex: 0 0 30%;
-    max-width: 30%;
-}
-
-.ssc-hotel-search .elementor-col-25 {
-    flex: 0 0 25%;
-    max-width: 25%;
-}
-
-.ssc-hotel-search .elementor-col-15 {
-    flex: 0 0 15%;
-    max-width: 15%;
-    display: flex;
-}
-
-.ssc-hotel-search .elementor-col-15 .advanced_search_submit_button {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    background-color: var(--ssc-submit, #137699) !important;
-}
-
-.ssc-hotel-search .elementor-col-15 .advanced_search_submit_button:hover {
-    background-color: var(--ssc-submit-hover, #022947) !important;
-}
-
-.ssc-hotel-search .search_wr_elementor svg {
-    fill: var(--ssc-search-icon, #137699) !important;
-}
-
-.ssc-hotel-search .search_wr_elementor i {
-    color: var(--ssc-search-icon, #137699) !important;
-}
-
-.ssc-hotel-search .search_wr_elementor .wpestate-adv-holder form {
-        width: stretch;
+.ssc-hotel-search {
+    .search_wr_elementor {
+        background: #fff;
+        border: 1px solid #e8ebee;
+        border-radius: 12px;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+        padding: 14px;
+        margin-bottom: 22px;
     }
+
+    .search_wr_elementor .wpestate-adv-holder {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        gap: 10px;
+        margin: 0;
+    }
+
+    .elementor-field-label {
+        display: none !important;
+    }
+
+    .elementor-field-group {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        min-width: 0;
+    }
+
+    .elementor-col-30 {
+        flex: 0 0 30%;
+        max-width: 30%;
+    }
+
+    .elementor-col-25 {
+        flex: 0 0 25%;
+        max-width: 25%;
+    }
+
+    .elementor-col-15 {
+        flex: 0 0 15%;
+        max-width: 15%;
+        display: flex;
+
+        .advanced_search_submit_button {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            background-color: var(--ssc-submit, #137699) !important;
+
+            &:hover {
+                background-color: var(--ssc-submit-hover, #022947) !important;
+            }
+        }
+    }
+
+    .search_wr_elementor {
+        svg {
+            fill: var(--ssc-submit, #137699) !important;
+        }
+
+        i {
+            color: var(--ssc-submit, #137699) !important;
+        }
+
+        .wpestate-adv-holder form {
+            width: stretch;
+        }
+    }
+}
 
 @media (max-width: bp.$bp-sm) {
-    .ssc-hotel-search .search_wr_elementor .wpestate-adv-holder {
-        flex-direction: column;
-        align-items: stretch;
-    }
+    .ssc-hotel-search {
+        .search_wr_elementor .wpestate-adv-holder {
+            flex-direction: column;
+            align-items: stretch;
+        }
 
-    .ssc-hotel-search .elementor-col-30,
-    .ssc-hotel-search .elementor-col-25,
-    .ssc-hotel-search .elementor-col-15 {
-        flex: 0 0 auto;
-        max-width: 100%;
+        .elementor-col-30,
+        .elementor-col-25,
+        .elementor-col-15 {
+            flex: 0 0 auto;
+            max-width: 100%;
+        }
     }
 }
 
@@ -88,7 +94,8 @@
    guest dropdown would sit open and wreck the row. Previews carry a
    marker class (added by the preview endpoint) — keep it shut there;
    the frontend toggle uses inline styles and is unaffected. */
-.ssc-preview .wpestate_guest_no_buttons {
-    display: none !important;
+.ssc-preview {
+    .wpestate_guest_no_buttons {
+        display: none !important;
+    }
 }
-

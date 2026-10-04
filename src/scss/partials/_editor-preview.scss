@@ -11,24 +11,25 @@
    only the frameless look and the header clearance are repeated here. The
    canvas has no overlay header, but keeping the same top padding means the
    preview matches the published page instead of looking tighter. */
-.ssc-preview .ssc-hero.alignfull {
-    border-radius: 0;
-}
+.ssc-preview {
+    .ssc-hero.alignfull {
+        border-radius: 0;
+    }
 
-.ssc-preview .ssc-hero-inner {
-    padding-top: 120px;
-}
+    .ssc-hero-inner {
+        padding-top: 120px;
+    }
 
-/* Same section rhythm as the homepage, so the preview reads as one page. */
-.ssc-preview .ssc-tablets,
-.ssc-preview .ssc-row,
-.ssc-preview .ssc-features {
-    border-bottom: 1px solid #e8ebee;
-    padding-bottom: 28px;
-    margin-bottom: 28px;
-}
+    /* Same section rhythm as the homepage, so the preview reads as one page. */
+    .ssc-tablets,
+    .ssc-row,
+    .ssc-features {
+        border-bottom: 1px solid #e8ebee;
+        padding-bottom: 28px;
+        margin-bottom: 28px;
+    }
 
-.ssc-preview .ssc-payments {
-    margin-top: 40px;
+    .ssc-payments {
+        margin-top: 40px;
+    }
 }
-

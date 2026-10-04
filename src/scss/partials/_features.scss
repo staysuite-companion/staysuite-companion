@@ -2,25 +2,27 @@
 
 .ssc-features {
     margin: 10px 0 36px;
+
+    h2 {
+        color: var(--ssc-accent);
+        margin-bottom: 26px;
+    }
 }
 
-.ssc-features h2 {
-    color: var(--ssc-accent);
-    margin-bottom: 26px;
-}
-
+// Sits between the h2 and h3 rules in the cascade; nested grouping would move it.
 .ssc-feature-icon {
     display: inline-flex;
     color: var(--ssc-headings);
     margin-bottom: 10px;
 }
 
-.ssc-features h3 {
-    font-size: 16px;
-    margin: 0 0 8px;
-}
+.ssc-features {
+    h3 {
+        font-size: 16px;
+        margin: 0 0 8px;
+    }
 
-.ssc-features p {
-    font-size: 14px;
+    p {
+        font-size: 14px;
+    }
 }
-
