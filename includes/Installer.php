@@ -51,7 +51,7 @@ class Installer {
      */
     public static function activate() {
         if ( ! self::is_required_theme_active() ) {
-            deactivate_plugins( plugin_basename( SSC_FILE ) );
+            deactivate_plugins( plugin_basename( Plugin::file() ) );
             wp_die(
                 esc_html__( 'StaySuite Companion for WpRentals requires the WpRentals theme to be installed and activated.', 'staysuite-companion' ),
                 esc_html__( 'Plugin Activation Error', 'staysuite-companion' ),

@@ -92,6 +92,7 @@ class ComposerStaticInit68a864c75adfc4ceb5411937eed979bf
         'StaySuite\\Companion\\Frontend\\PageTemplate' => __DIR__ . '/../..' . '/includes/Frontend/PageTemplate.php',
         'StaySuite\\Companion\\Frontend\\RoomSingleLink' => __DIR__ . '/../..' . '/includes/Frontend/RoomSingleLink.php',
         'StaySuite\\Companion\\Frontend\\Scripts' => __DIR__ . '/../..' . '/includes/Frontend/Scripts.php',
+        'StaySuite\\Companion\\Frontend\\SearchScope' => __DIR__ . '/../..' . '/includes/Frontend/SearchScope.php',
         'StaySuite\\Companion\\Frontend\\TemplateLoader' => __DIR__ . '/../..' . '/includes/Frontend/TemplateLoader.php',
         'StaySuite\\Companion\\Frontend\\Theme' => __DIR__ . '/../..' . '/includes/Frontend/Theme.php',
         'StaySuite\\Companion\\Hotel\\HotelCPT' => __DIR__ . '/../..' . '/includes/Hotel/HotelCPT.php',
@@ -99,6 +100,8 @@ class ComposerStaticInit68a864c75adfc4ceb5411937eed979bf
         'StaySuite\\Companion\\Hotel\\RoomLink' => __DIR__ . '/../..' . '/includes/Hotel/RoomLink.php',
         'StaySuite\\Companion\\Installer' => __DIR__ . '/../..' . '/includes/Installer.php',
         'StaySuite\\Companion\\Links' => __DIR__ . '/../..' . '/includes/Links.php',
+        'StaySuite\\Companion\\Notice' => __DIR__ . '/../..' . '/includes/Notice.php',
+        'StaySuite\\Companion\\Plugin' => __DIR__ . '/../..' . '/includes/Plugin.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

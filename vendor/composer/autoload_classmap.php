@@ -77,6 +77,7 @@ return array(
     'StaySuite\\Companion\\Frontend\\PageTemplate' => $baseDir . '/includes/Frontend/PageTemplate.php',
     'StaySuite\\Companion\\Frontend\\RoomSingleLink' => $baseDir . '/includes/Frontend/RoomSingleLink.php',
     'StaySuite\\Companion\\Frontend\\Scripts' => $baseDir . '/includes/Frontend/Scripts.php',
+    'StaySuite\\Companion\\Frontend\\SearchScope' => $baseDir . '/includes/Frontend/SearchScope.php',
     'StaySuite\\Companion\\Frontend\\TemplateLoader' => $baseDir . '/includes/Frontend/TemplateLoader.php',
     'StaySuite\\Companion\\Frontend\\Theme' => $baseDir . '/includes/Frontend/Theme.php',
     'StaySuite\\Companion\\Hotel\\HotelCPT' => $baseDir . '/includes/Hotel/HotelCPT.php',
@@ -84,4 +85,6 @@ return array(
     'StaySuite\\Companion\\Hotel\\RoomLink' => $baseDir . '/includes/Hotel/RoomLink.php',
     'StaySuite\\Companion\\Installer' => $baseDir . '/includes/Installer.php',
     'StaySuite\\Companion\\Links' => $baseDir . '/includes/Links.php',
+    'StaySuite\\Companion\\Notice' => $baseDir . '/includes/Notice.php',
+    'StaySuite\\Companion\\Plugin' => $baseDir . '/includes/Plugin.php',
 );

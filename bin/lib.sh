@@ -13,7 +13,10 @@ SLUG="staysuite-companion"
 MAIN_FILE="staysuite-companion.php"
 README_FILE="readme.txt"
 # Runtime version constant, kept in sync with the header for update checks.
-VERSION_CONST="SSC_VERSION"
+# The source of truth is the Plugin class constant; the bootstrap only
+# defines a dynamic SSC_VERSION alias, so the tooling reads/writes the class.
+VERSION_CONST="VERSION"
+CLASS_VERSION_FILE="includes/Plugin.php"
 PACKAGE_FILE="package.json"
 
 # Everything users need at runtime. Nothing else is copied into the zip.
@@ -97,7 +100,7 @@ version_get() {
 
 # Current version from the runtime constant, used for update checks.
 version_get_constant() {
-    grep -m1 -E "^[[:space:]]*define[[:space:]]*\([[:space:]]*'$VERSION_CONST'" "$PLUGIN_DIR/$MAIN_FILE" \
+    grep -m1 -E "^[[:space:]]*const[[:space:]]+$VERSION_CONST[[:space:]]*=" "$PLUGIN_DIR/$CLASS_VERSION_FILE" \
         | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" || true
 }
 
@@ -138,8 +141,11 @@ version_sync() {
     if [ -f "$PLUGIN_DIR/$MAIN_FILE" ]; then
         sed_inplace "$PLUGIN_DIR/$MAIN_FILE" \
             "s|^([[:space:]]*\\*[[:space:]]*Version:[[:space:]]*)[0-9]+\\.[0-9]+\\.[0-9]+.*$|\\1$new|"
-        sed_inplace "$PLUGIN_DIR/$MAIN_FILE" \
-            "s|(define[[:space:]]*\([[:space:]]*'$VERSION_CONST',[[:space:]]*)'[^']*'|\\1'$new'|"
+    fi
+
+    if [ -f "$PLUGIN_DIR/$CLASS_VERSION_FILE" ]; then
+        sed_inplace "$PLUGIN_DIR/$CLASS_VERSION_FILE" \
+            "s|(const[[:space:]]+$VERSION_CONST[[:space:]]*=[[:space:]]*')[^']+(')|\\1$new\\2|"
     fi
 
     if [ -f "$PLUGIN_DIR/$README_FILE" ]; then
@@ -165,33 +171,32 @@ pro_plugin_dir() {
 version_min_free_get() {
     local dir
     dir="$(pro_plugin_dir)" || return 0
-    grep -m1 -E '^[[:space:]]*const[[:space:]]+MIN_FREE_VERSION' "$dir/staysuite-companion-pro.php" \
+    grep -m1 -E '^[[:space:]]*const[[:space:]]+MIN_FREE_VERSION' "$dir/includes/Core/Pro.php" \
         | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true
 }
 
 # Rewrite every place that states which free version Pro requires: the gate
-# constant, the admin notice, both readmes and the architecture doc. The
+# constant, both readmes and the architecture doc. The Pro outdated-free
+# notice renders MIN_FREE_VERSION dynamically, so it needs no rewrite. The
 # patterns match any existing version rather than one specific number, so this
 # stays correct however many releases have gone by.
 version_sync_min_free() {
-    local new="$1" dir pro_main
+    local new="$1" dir pro_class
     [ -n "$new" ] || return 0
 
     if ! dir="$(pro_plugin_dir)"; then
         warn "Pro plugin not found next to $PLUGIN_DIR — skipped the minimum-free-version sync"
         return 0
     fi
-    pro_main="$dir/staysuite-companion-pro.php"
+    pro_class="$dir/includes/Core/Pro.php"
 
     if [ "$DRY_RUN" -eq 1 ]; then
-        log "dry-run: set the Pro minimum free version to $new ($pro_main, its README/readme.txt, docs/pro.md)"
+        log "dry-run: set the Pro minimum free version to $new ($pro_class, its README/readme.txt, docs/pro.md)"
         return 0
     fi
 
-    sed_inplace "$pro_main" \
+    sed_inplace "$pro_class" \
         "s|(const MIN_FREE_VERSION = ')[^']+(')|\\1$new\\2|"
-    sed_inplace "$pro_main" \
-        "s|(needs StaySuite Companion )[0-9]+\\.[0-9]+\\.[0-9]+( or newer)|\\1$new\\2|"
 
     if [ -f "$dir/readme.txt" ]; then
         sed_inplace "$dir/readme.txt" \
@@ -236,7 +241,7 @@ version_verify() {
     packaged="$(grep -m1 -E '"version"' "$PLUGIN_DIR/$PACKAGE_FILE" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)"
 
     [ -n "$header" ] || die "No Version header in $MAIN_FILE"
-    [ -n "$constant" ] || die "No define('$VERSION_CONST', ...) in $MAIN_FILE"
+    [ -n "$constant" ] || die "No const $VERSION_CONST in $CLASS_VERSION_FILE"
     [ -n "$stable" ] || die "No 'Stable tag:' in $README_FILE"
     [ -n "$packaged" ] || die "No \"version\" in $PACKAGE_FILE"
 

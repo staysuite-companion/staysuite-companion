@@ -37,7 +37,9 @@ Note: `npm run build` needs `NODE_ENV=development`. A shell that exports `NODE_E
 
 | Area | Files | Responsibility |
 |---|---|---|
-| Boot | `staysuite-companion.php` | Singleton + container, constants, activation hooks, translations |
+| Boot | `staysuite-companion.php` | Thin bootstrap: Composer autoload, `SSC_*` BC aliases, `boot()` on `plugins_loaded`, lifecycle hooks |
+| Core | `includes/Plugin.php` | Singleton + container, class constants (`VERSION`, `MIN_PHP`, paths/URL), instantiation and hooks |
+| Notices | `includes/Notice.php` | Every admin notice (PHP/theme checks, assets, AJAX dismissal) |
 | Hotels | `includes/Hotel/` | `ssc_hotel` CPT, room↔hotel linking, queries |
 | Blocks | `includes/Blocks/` | Block registration, server-side rendering, editor previews, patterns |
 | Booking | `includes/Booking/` | Group request CPT, quote form, AJAX submit |

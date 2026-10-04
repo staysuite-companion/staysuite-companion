@@ -35,7 +35,7 @@ bin/release.sh --major     # 1.0.0 -> 2.0.0
 bin/build.sh               # minimal production zip → dist/
 ```
 
-`bin/release.sh` is the only command that writes a version; it syncs the header, `SSC_VERSION`, `readme.txt` `Stable tag:`, `package.json` and the changelog in one pass, then commits, tags `v{version}`, pushes and attaches the zip to the GitHub release. `--min-free X.Y.Z` raises the free version the Pro add-on requires, rewriting its gate constant, admin notice, readmes and `docs/pro.md`. Full process, including the wp.org SVN publish: [`docs/release.md`](docs/release.md).
+`bin/release.sh` is the only command that writes a version; it syncs the header, `Plugin::VERSION` (`includes/Plugin.php`), `readme.txt` `Stable tag:`, `package.json` and the changelog in one pass, then commits, tags `v{version}`, pushes and attaches the zip to the GitHub release. `--min-free X.Y.Z` raises the free version the Pro add-on requires, rewriting its gate constant, admin notice, readmes and `docs/pro.md`. Full process, including the wp.org SVN publish: [`docs/release.md`](docs/release.md).
 
 ## License
 

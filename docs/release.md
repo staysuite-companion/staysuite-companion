@@ -17,7 +17,7 @@ bin/build.sh                  # production zip only
 bin/build.sh [version] [--lint] [--skip-npm] [--vendor=copy]
 ```
 
-1. Verifies that the plugin header, `define('SSC_VERSION', …)` and `readme.txt` `Stable tag:` all agree.
+1. Verifies that the plugin header, `Plugin::VERSION` (`includes/Plugin.php`) and `readme.txt` `Stable tag:` all agree.
 2. Optionally runs `composer lint` (`--lint`).
 3. `npm ci` + `npm run build` (skipped with `--skip-npm`). `npm run build` compiles `src/scss` to `assets/build/css` first, then bundles the JS. It forces `NODE_ENV=development` for the install because a shell that exports `NODE_ENV=production` makes npm skip the devDependencies where `@wordpress/scripts` and `sass` live.
 4. Fails if a compiled stylesheet is missing or older than its Sass source, so a `--skip-npm` build cannot ship stale styles.
@@ -49,11 +49,11 @@ bin/release.sh [--minor|--major|--set X.Y.Z] [--min-free X.Y.Z]
 | File | Marker |
 |---|---|
 | `staysuite-companion.php` | `Version:` header (Updates screen, wp.org) |
-| `staysuite-companion.php` | `define('SSC_VERSION', …)` (own update checks) |
+| `includes/Plugin.php` | `const VERSION` (own update checks; `SSC_VERSION` in the bootstrap is an alias) |
 | `readme.txt` | `Stable tag:` (what wp.org actually serves) |
 | `package.json` | `"version"` (tooling) |
 | `readme.txt` | new `= x.y.z =` changelog entry |
-| `../staysuite-companion-pro/*` | `MIN_FREE_VERSION`, its admin notice, `readme.txt`, `README.md` — with `--min-free` |
+| `../staysuite-companion-pro/*` | `MIN_FREE_VERSION` (`includes/Core/Pro.php`), `readme.txt`, `README.md` — with `--min-free` (the admin notice renders the constant dynamically) |
 | `docs/pro.md` | the documented gate `>= x.y.z` — with `--min-free` |
 
 `--min-free X.Y.Z` raises the free version the Pro add-on requires. It is opt-in rather than automatic: that constant is a *floor*, so raising it on every patch would force every Pro site to update the free plugin for no reason. Raise it when Pro starts using a hook or block that only exists in a new free release. Because Pro is a separate repository, the release prints its changed files at the end so they can be committed and released separately.
