@@ -55,10 +55,10 @@ class RequestCPT {
     /**
      * Register the request post type (admin UI only).
      *
-     * Requests hold visitor names, emails and phone numbers, so every
-     * primitive capability maps to manage_options: administrators only.
-     * The parent StaySuite menu already requires manage_options, which
-     * keeps the screen out of reach for lower roles entirely.
+     * Every primitive capability maps to edit_posts, the same bar as
+     * the rest of the StaySuite admin. manage_options would lock it to
+     * administrators only, but several sites also run broken
+     * manage_options mappings mid-debug and lose the screen entirely.
      *
      * @return void
      */
@@ -81,22 +81,22 @@ class RequestCPT {
 				'supports'     => array( 'title' ),
 				'show_in_rest' => false,
 				'capabilities' => array(
-					'edit_post'              => 'manage_options',
-					'read_post'              => 'manage_options',
-					'delete_post'            => 'manage_options',
-					'edit_posts'             => 'manage_options',
-					'edit_others_posts'      => 'manage_options',
-					'delete_posts'           => 'manage_options',
-					'publish_posts'          => 'manage_options',
-					'read_private_posts'     => 'manage_options',
-					'delete_private_posts'   => 'manage_options',
-					'delete_published_posts' => 'manage_options',
-					'delete_others_posts'    => 'manage_options',
-					'edit_private_posts'     => 'manage_options',
-					'edit_published_posts'   => 'manage_options',
-					'create_posts'           => 'manage_options',
+					'edit_post'              => 'edit_posts',
+					'read_post'              => 'edit_posts',
+					'delete_post'            => 'edit_posts',
+					'edit_posts'             => 'edit_posts',
+					'edit_others_posts'      => 'edit_posts',
+					'delete_posts'           => 'edit_posts',
+					'publish_posts'          => 'edit_posts',
+					'read_private_posts'     => 'edit_posts',
+					'delete_private_posts'   => 'edit_posts',
+					'delete_published_posts' => 'edit_posts',
+					'delete_others_posts'    => 'edit_posts',
+					'edit_private_posts'     => 'edit_posts',
+					'edit_published_posts'   => 'edit_posts',
+					'create_posts'           => 'edit_posts',
 				),
-				'map_meta_cap' => true,
+				'map_meta_cap' => false,
             )
         );
     }
@@ -136,45 +136,101 @@ class RequestCPT {
      */
     public function render_meta_box( $post ) {
         wp_nonce_field( 'ssc_request_status', 'ssc_request_status_nonce' );
-        $fields = array(
-            'city'         => __( 'City', 'staysuite-companion' ),
-            'check_in'     => __( 'Check in', 'staysuite-companion' ),
-            'check_out'    => __( 'Check out', 'staysuite-companion' ),
-            'rooms'        => __( 'Rooms needed', 'staysuite-companion' ),
-            'guests'       => __( 'Guests', 'staysuite-companion' ),
-            'male'         => __( 'Male', 'staysuite-companion' ),
-            'female'       => __( 'Female', 'staysuite-companion' ),
-            'budget_min'   => __( 'Budget min', 'staysuite-companion' ),
-            'budget_max'   => __( 'Budget max', 'staysuite-companion' ),
-            'name'         => __( 'Contact name', 'staysuite-companion' ),
-            'email'        => __( 'Contact email', 'staysuite-companion' ),
-            'phone'        => __( 'Contact phone', 'staysuite-companion' ),
-            'requirements' => __( 'Extra requirements', 'staysuite-companion' ),
+        $get = static function ( $key ) use ( $post ) {
+            $v = get_post_meta( $post->ID, '_ssc_' . $key, true );
+            return ( '' === trim( (string) $v ) ) ? null : $v;
+        };
+        $status = self::get_status( $post->ID );
+        $status_colors = array(
+            'pending'   => array( '#fff7ed', '#c2410c' ),
+            'quoted'    => array( '#eff6ff', '#1d4ed8' ),
+            'confirmed' => array( '#ecfdf5', '#047857' ),
+            'cancelled' => array( '#fef2f2', '#b91c1c' ),
         );
-        print '<table class="form-table">';
-        foreach ( $fields as $key => $label ) {
-            $value = get_post_meta( $post->ID, '_ssc_' . $key, true );
-            print '<tr><th>' . esc_html( $label ) . '</th><td>' . esc_html( $value ) . '</td></tr>';
+        list( $status_bg, $status_fg ) = isset( $status_colors[ $status ] ) ? $status_colors[ $status ] : $status_colors['pending'];
+        $location = $get( 'location_text' );
+        if ( null === $location ) {
+            $location = $get( 'city' );
+        }
+        print '<style>
+        .ssc-req{font-family:inherit}
+        .ssc-req-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}
+        @media(max-width:900px){.ssc-req-grid{grid-template-columns:repeat(2,1fr)}}
+        .ssc-req-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px}
+        .ssc-req-card b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin-bottom:4px}
+        .ssc-req-card span{font-size:15px;font-weight:700;color:#0f172a}
+        .ssc-req-section{margin:16px 0 6px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#334155}
+        .ssc-req-pill{display:inline-block;padding:4px 12px;border-radius:999px;font-weight:700;font-size:12px;background:' . esc_attr( $status_bg ) . ';color:' . esc_attr( $status_fg ) . '}
+        .ssc-req-list{margin:0 0 10px 0;padding:0;list-style:none}
+        .ssc-req-list li{padding:4px 0}
+        .ssc-req-list a{text-decoration:none;font-weight:600}
+        .ssc-req-muted{color:#94a3b8;font-style:italic}
+        .ssc-req-contact{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+        @media(max-width:900px){.ssc-req-contact{grid-template-columns:1fr}}
+        .ssc-req-reqbox{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;white-space:pre-wrap}
+        </style>';
+        print '<div class="ssc-req">';
+        print '<p><span class="ssc-req-pill">' . esc_html( self::STATUSES[ $status ] ) . '</span></p>';
+        print '<div class="ssc-req-grid">';
+        $cards = array(
+            __( 'Location', 'staysuite-companion' ) => null === $location ? '—' : $location,
+            __( 'Check in', 'staysuite-companion' )  => null === $get( 'check_in' ) ? '—' : $get( 'check_in' ),
+            __( 'Check out', 'staysuite-companion' ) => null === $get( 'check_out' ) ? '—' : $get( 'check_out' ),
+            __( 'Rooms', 'staysuite-companion' )     => null === $get( 'rooms' ) ? '—' : $get( 'rooms' ),
+            __( 'Guests', 'staysuite-companion' )    => null === $get( 'guests' ) ? '—' : $get( 'guests' ),
+            __( 'Male / Female', 'staysuite-companion' ) => ( (int) $get( 'male' ) + (int) $get( 'female' ) ) > 0 ? ( (int) $get( 'male' ) . ' / ' . (int) $get( 'female' ) ) : '—',
+            __( 'Budget min', 'staysuite-companion' ) => null === $get( 'budget_min' ) ? '—' : $get( 'budget_min' ),
+            __( 'Budget max', 'staysuite-companion' ) => null === $get( 'budget_max' ) ? '—' : $get( 'budget_max' ),
+        );
+        foreach ( $cards as $label => $val ) {
+            print '<div class="ssc-req-card"><b>' . esc_html( $label ) . '</b><span>' . esc_html( (string) $val ) . '</span></div>';
+        }
+        print '</div>';
+        print '<div class="ssc-req-section">' . esc_html__( 'Contact', 'staysuite-companion' ) . '</div>';
+        print '<div class="ssc-req-contact">';
+        print '<div class="ssc-req-card"><b>' . esc_html__( 'Name', 'staysuite-companion' ) . '</b><span>' . esc_html( null === $get( 'name' ) ? '—' : $get( 'name' ) ) . '</span></div>';
+        print '<div class="ssc-req-card"><b>' . esc_html__( 'Email', 'staysuite-companion' ) . '</b><span>' . esc_html( null === $get( 'email' ) ? '—' : $get( 'email' ) ) . '</span></div>';
+        print '<div class="ssc-req-card"><b>' . esc_html__( 'Phone', 'staysuite-companion' ) . '</b><span>' . esc_html( null === $get( 'phone' ) ? '—' : $get( 'phone' ) ) . '</span></div>';
+        print '</div>';
+        $reqs = $get( 'requirements' );
+        if ( null !== $reqs ) {
+            print '<div class="ssc-req-section">' . esc_html__( 'Extra requirements', 'staysuite-companion' ) . '</div>';
+            print '<div class="ssc-req-reqbox">' . esc_html( $reqs ) . '</div>';
         }
         $matched = (array) get_post_meta( $post->ID, '_ssc_matched', true );
-        $links = array();
-        foreach ( $matched as $room_id ) {
-            $room_id = intval( $room_id );
+        if ( $matched !== array() ) {
+            print '<div class="ssc-req-section">' . esc_html__( 'Suggested properties', 'staysuite-companion' ) . '</div>';
+            print '<ul class="ssc-req-list">';
+            foreach ( $matched as $room_id ) {
+                $room_id = intval( $room_id );
+                if ( get_post_status( $room_id ) ) {
+                    print '<li><a href="' . esc_url( get_edit_post_link( $room_id ) ) . '">' . esc_html( get_the_title( $room_id ) ) . '</a></li>';
+                }
+            }
+            print '</ul>';
+        }
+        $selected = array_map( 'intval', (array) get_post_meta( $post->ID, '_ssc_selected', true ) );
+        $chosen = array();
+        foreach ( $selected as $room_id ) {
             if ( get_post_status( $room_id ) ) {
-                $links[] = '<a href="' . esc_url( get_edit_post_link( $room_id ) ) . '">' . esc_html( get_the_title( $room_id ) ) . '</a>';
+                $chosen[] = '<a href="' . esc_url( get_edit_post_link( $room_id ) ) . '">' . esc_html( get_the_title( $room_id ) ) . '</a>';
             }
         }
-        print '<tr><th>' . esc_html__( 'Suggested properties', 'staysuite-companion' ) . '</th><td>'
-            . ( ! empty( $links ) ? implode( '<br>', $links ) : esc_html__( 'None', 'staysuite-companion' ) ) . '</td></tr>';
-        print self::selection_rows( intval( $post->ID ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Rows escape every value when built.
-        print '</table>';
-        print '<p><label for="ssc_request_status"><strong>' . esc_html__( 'Status', 'staysuite-companion' ) . '</strong></label> ';
+        print '<div class="ssc-req-section">' . esc_html__( 'Selected stays', 'staysuite-companion' ) . '</div>';
+        print ! empty( $chosen ) ? '<ul class="ssc-req-list"><li>' . implode( '</li><li>', $chosen ) . '</li></ul>' : '<p class="ssc-req-muted">' . esc_html__( 'None — general quote', 'staysuite-companion' ) . '</p>';
+        $selection = self::selection_rows( intval( $post->ID ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Rows escape every value when built.
+        if ( '' !== $selection ) {
+            print '<table class="form-table" style="margin-top:12px">' . $selection . '</table>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Selection rows escape their own values.
+        }
+        print '<hr style="margin:18px 0;border:0;border-top:1px solid #e2e8f0;">';
+        print '<p><label for="ssc_request_status"><strong>' . esc_html__( 'Update status', 'staysuite-companion' ) . '</strong></label> ';
         print '<select id="ssc_request_status" name="ssc_request_status">';
         foreach ( self::STATUSES as $slug => $label ) {
             print '<option value="' . esc_attr( $slug ) . '" ' . selected( self::get_status( $post->ID ), $slug, false ) . '>'
                 . esc_html( $label ) . '</option>';
         }
         print '</select></p>';
+        print '</div>';
     }
 
     /**

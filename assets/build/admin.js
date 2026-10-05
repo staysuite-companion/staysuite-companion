@@ -378,7 +378,19 @@ function SettingsTab() {
     label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Enable group quote requests', 'staysuite-companion'),
     checked: settings.group_selection,
     onChange: set('group_selection')
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Search colors', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(Row, {
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(Row, {
+    label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Required contact', 'staysuite-companion'),
+    hint: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Which contact field the group quote form requires. Phone numbers are never format-checked, only required.', 'staysuite-companion')
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("select", {
+    value: ['email', 'phone', 'both'].includes(settings.contact_required) ? settings.contact_required : 'email',
+    onChange: e => set('contact_required')(e.target.value)
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
+    value: "email"
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Email only', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
+    value: "phone"
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Phone only', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
+    value: "both"
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Email and phone', 'staysuite-companion')))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Search colors', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(Row, {
     label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Color source', 'staysuite-companion')
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
     style: {

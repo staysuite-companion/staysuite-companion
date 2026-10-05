@@ -1,9 +1,10 @@
 /**
  * Individual / Group switch mounted above a theme search bar.
  *
- * Group mode hides the search bar with an animated collapse and portals
- * the group quote form to a sibling node AFTER the cover, so the cover
- * never stretches and the form spans the content width.
+ * Group mode keeps the search bar visible (its submit is hidden by CSS
+ * and routed into the quote flow) and portals the group quote form to a
+ * sibling node AFTER the cover, so the cover never stretches and the
+ * form spans the content width.
  */
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -22,7 +23,7 @@ export default function SearchMode({ wrapper }) {
         if (mode !== 'group') {
             return undefined;
         }
-        // Route the theme search submit into the group quote flow.
+        // Route the theme search submit into the stays suggestion step.
         const form = wrapper.querySelector('form');
         if (!form) {
             return undefined;

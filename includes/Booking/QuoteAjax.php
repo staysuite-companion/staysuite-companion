@@ -8,6 +8,7 @@
 
 namespace StaySuite\Companion\Booking;
 
+use StaySuite\Companion\Admin\Settings;
 use StaySuite\Companion\Hotel\Repository;
 use WP_Query;
 
@@ -56,6 +57,8 @@ class QuoteAjax {
     public function __construct() {
         add_action( 'wp_ajax_ssc_group_quote', array( $this, 'handle' ) );
         add_action( 'wp_ajax_nopriv_ssc_group_quote', array( $this, 'handle' ) );
+        add_action( 'wp_ajax_ssc_group_suggest', array( $this, 'handle_suggest' ) );
+        add_action( 'wp_ajax_nopriv_ssc_group_suggest', array( $this, 'handle_suggest' ) );
         add_action( 'wp_ajax_ssc_quote_nonce', array( $this, 'serve_nonce' ) );
         add_action( 'wp_ajax_nopriv_ssc_quote_nonce', array( $this, 'serve_nonce' ) );
     }
@@ -78,26 +81,13 @@ class QuoteAjax {
      * @return void
      */
     public function handle() {
-        $raw = is_array( $_POST ) ? wp_unslash( $_POST ) : array();
-        $nonce = isset( $raw['nonce'] ) && is_string( $raw['nonce'] ) ? sanitize_key( $raw['nonce'] ) : '';
-        if ( '' === $nonce || ! wp_verify_nonce( $nonce, self::NONCE_ACTION ) ) {
-            wp_send_json_error(
-                array(
-                    'message' => __( 'Your session expired. Please try again.', 'staysuite-companion' ),
-                    'code'    => 'ssc_nonce_expired',
-                ),
-                403
-            );
-        }
-        if ( isset( $raw[ self::HONEYPOT_FIELD ] ) && '' !== $raw[ self::HONEYPOT_FIELD ] ) {
-            wp_send_json_error(
-                array(
-                    'message' => __( 'Your request could not be submitted. Please try again.', 'staysuite-companion' ),
-                )
-            );
-        }
+        $raw = is_array( $_POST ) ? wp_unslash( $_POST ) : array(); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce and honeypot verified in verify_access().
+        $this->verify_access( $raw );
         $input = $this->sanitize_input( $raw );
-        $error = $this->validate( $input );
+        $error = $this->validate_trip( $input );
+        if ( '' === $error ) {
+            $error = $this->validate_contact( $input );
+        }
         if ( $error !== '' ) {
             wp_send_json_error( array( 'message' => $error ) );
         }
@@ -107,6 +97,13 @@ class QuoteAjax {
         }
         $matches = $this->find_matches( $input );
         $request_id = $this->persist( $input, $matches );
+        if ( $request_id <= 0 ) {
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Your request could not be saved. Please try again.', 'staysuite-companion' ),
+                )
+            );
+        }
         $this->notify( $request_id, $input, $matches );
         /**
          * Fires after a group request is stored and mailed.
@@ -125,6 +122,63 @@ class QuoteAjax {
 				'matches'    => $matches,
             )
         );
+    }
+
+    /**
+     * Suggest matching stays without storing anything.
+     *
+     * Anonymous first step of the group flow: same matching as a quote,
+     * but no contact details needed, nothing persisted, nobody emailed.
+     *
+     * @return void
+     */
+    public function handle_suggest() {
+        $raw = is_array( $_POST ) ? wp_unslash( $_POST ) : array(); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce and honeypot verified in verify_access().
+        $this->verify_access( $raw );
+        $input = $this->sanitize_input( $raw );
+        $error = $this->validate_trip( $input );
+        if ( $error !== '' ) {
+            wp_send_json_error( array( 'message' => $error ) );
+        }
+        $limited = $this->check_rate_limit( 'suggest' );
+        if ( $limited !== '' ) {
+            wp_send_json_error( array( 'message' => $limited ), 429 );
+        }
+        $matches = $this->find_matches( $input );
+        wp_send_json_success(
+            array(
+				'total'   => count( $matches ),
+				'matches' => $matches,
+            )
+        );
+    }
+
+    /**
+     * Check the nonce and honeypot for a submission.
+     *
+     * Sends the JSON error and exits on failure (like wp_send_json_*).
+     *
+     * @param array<string,mixed> $raw Unslashed POST data.
+     * @return void
+     */
+    private function verify_access( $raw ) {
+        $nonce = isset( $raw['nonce'] ) && is_string( $raw['nonce'] ) ? sanitize_key( $raw['nonce'] ) : '';
+        if ( '' === $nonce || ! wp_verify_nonce( $nonce, self::NONCE_ACTION ) ) {
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Your session expired. Please try again.', 'staysuite-companion' ),
+                    'code'    => 'ssc_nonce_expired',
+                ),
+                403
+            );
+        }
+        if ( isset( $raw[ self::HONEYPOT_FIELD ] ) && '' !== $raw[ self::HONEYPOT_FIELD ] ) {
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Your request could not be submitted. Please try again.', 'staysuite-companion' ),
+                )
+            );
+        }
     }
 
     /**
@@ -160,6 +214,7 @@ class QuoteAjax {
             'email'        => isset( $raw['email'] ) ? self::cap_length( sanitize_email( $raw['email'] ), 254 ) : '',
             'phone'        => isset( $raw['phone'] ) ? self::cap_length( sanitize_text_field( $raw['phone'] ), 40 ) : '',
             'requirements' => isset( $raw['requirements'] ) ? self::cap_length( sanitize_textarea_field( $raw['requirements'] ), 2000 ) : '',
+            'selected_rooms' => self::sanitize_id_list( $raw['selected_rooms'] ?? array() ),
         );
         $input['check_in']  = self::normalize_date( $input['check_in'] );
         $input['check_out'] = self::normalize_date( $input['check_out'] );
@@ -170,6 +225,26 @@ class QuoteAjax {
          * @param array<string,mixed> $raw   Raw POST data.
          */
         return apply_filters( 'ssc_quote_payload', $input, $raw );
+    }
+
+    /**
+     * Sanitize a list of room IDs from the request.
+     *
+     * @param mixed $value Raw value.
+     * @return int[] Unique positive room IDs, at most 50.
+     */
+    private static function sanitize_id_list( $value ) {
+        if ( ! is_array( $value ) ) {
+            return array();
+        }
+        $ids = array();
+        foreach ( $value as $id ) {
+            $id = intval( $id );
+            if ( $id > 0 ) {
+                $ids[] = $id;
+            }
+        }
+        return array_values( array_unique( array_slice( $ids, 0, 50 ) ) );
     }
 
     /**
@@ -277,18 +352,15 @@ class QuoteAjax {
     }
 
     /**
-     * Validate sanitized input.
+     * Validate the trip half of the input (city, dates).
+     *
+     * Runs for suggestions and quotes alike; contact details are checked
+     * separately in validate_contact() so suggestions stay anonymous.
      *
      * @param array<string,mixed> $input Sanitized input.
      * @return string Error message or empty string when valid.
      */
-    private function validate( $input ) {
-        if ( $input['name'] === '' ) {
-            return esc_html__( 'Please tell us your name.', 'staysuite-companion' );
-        }
-        if ( ! is_email( $input['email'] ) ) {
-            return esc_html__( 'Please enter a valid email address.', 'staysuite-companion' );
-        }
+    private function validate_trip( $input ) {
         if ( $input['city'] !== '' && ! get_term_by( 'slug', $input['city'], 'property_city' ) ) {
             return esc_html__( 'Please choose a valid place.', 'staysuite-companion' );
         }
@@ -315,33 +387,69 @@ class QuoteAjax {
     }
 
     /**
-     * Enforce per-IP quote throttling with transients.
+     * Validate the contact half of the input (name + required contact).
      *
-     * Only the hash of the address is used as the transient key; the raw
-     * IP is never stored. Limit shape is filterable:
-     * `array( 'max' => 5, 'window' => 600 )`.
+     * Which field is mandatory comes from Settings → Group quotes →
+     * Required contact (email only, phone only, or both). Phone numbers
+     * are only required to be present, never format-checked.
      *
+     * @param array<string,mixed> $input Sanitized input.
+     * @return string Error message or empty string when valid.
+     */
+    private function validate_contact( $input ) {
+        if ( $input['name'] === '' ) {
+            return esc_html__( 'Please tell us your name.', 'staysuite-companion' );
+        }
+        $required = Settings::get( 'contact_required' );
+        if ( 'phone' !== $required && ! is_email( $input['email'] ) ) {
+            return esc_html__( 'Please enter a valid email address.', 'staysuite-companion' );
+        }
+        if ( 'email' !== $required && '' === trim( $input['phone'] ) ) {
+            return esc_html__( 'Please enter your phone number.', 'staysuite-companion' );
+        }
+        return '';
+    }
+
+    /**
+     * Enforce per-IP throttling with transients.
+     *
+     * Quotes (stored + emailed) stay strict; suggestions (read-only,
+     * nothing stored) get a generous bucket so tweaking prefs never
+     * locks a visitor out. Buckets are separate: browsing suggestions
+     * does not eat the quote allowance. Only the hash of the address is
+     * used as the transient key; the raw IP is never stored. Limit shape
+     * is filterable:
+     * `array( 'max' => 5, 'window' => 600, 'suggest_max' => 30, 'suggest_window' => 600 )`.
+     *
+     * @param string $type 'quote' or 'suggest'.
      * @return string Error message when limited, empty string otherwise.
      */
-    private function check_rate_limit() {
+    private function check_rate_limit( $type = 'quote' ) {
         $limit = apply_filters(
             'ssc_quote_rate_limit', array(
 				'max' => 5,
 				'window' => 600,
+				'suggest_max' => 30,
+				'suggest_window' => 600,
             )
         );
         if ( ! is_array( $limit ) ) {
             $limit = array( 'max' => $limit );
         }
-        $max = isset( $limit['max'] ) ? max( 1, intval( $limit['max'] ) ) : 5;
-        $window = isset( $limit['window'] ) ? max( 60, intval( $limit['window'] ) ) : 600;
+        if ( 'suggest' === $type ) {
+            $max = isset( $limit['suggest_max'] ) ? max( 1, intval( $limit['suggest_max'] ) ) : 30;
+            $window = isset( $limit['suggest_window'] ) ? max( 60, intval( $limit['suggest_window'] ) ) : 600;
+        } else {
+            $max = isset( $limit['max'] ) ? max( 1, intval( $limit['max'] ) ) : 5;
+            $window = isset( $limit['window'] ) ? max( 60, intval( $limit['window'] ) ) : 600;
+        }
         $ip = isset( $_SERVER['REMOTE_ADDR'] ) && is_string( $_SERVER['REMOTE_ADDR'] )
             ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) )
             : '';
         if ( '' === $ip ) {
             return '';
         }
-        $key = 'ssc_rl_' . md5( $ip );
+        $key = 'ssc_rl_' . md5( $ip ) . '_' . $type;
         $count = intval( get_transient( $key ) );
         if ( $count >= $max ) {
             return esc_html__( 'Too many requests. Please try again in a few minutes.', 'staysuite-companion' );
@@ -386,6 +494,10 @@ class QuoteAjax {
      * Note: budget filters the base property_price meta. Multi-currency
      * conversion (theme divides by cookie rate) is not applied in v1.
      *
+     * When the search_result setting returns hotels, matching rooms are
+     * grouped by their hotel (same room→hotel rule as the search rewrite)
+     * and the hotels are suggested instead of the rooms.
+     *
      * @param array<string,mixed> $input Sanitized input.
      * @return array<int,array<string,mixed>> Match list.
      */
@@ -399,6 +511,7 @@ class QuoteAjax {
             'post_type'      => 'estate_property',
             'post_status'    => 'publish',
             'posts_per_page' => self::POOL_SIZE,
+            'fields'         => 'ids',
             'no_found_rows'  => true,
             'orderby'        => 'meta_value_num date',
             'meta_key'       => 'property_price',
@@ -439,12 +552,10 @@ class QuoteAjax {
         }
         // phpcs:enable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value, WordPress.DB.SlowDBQuery.slow_db_query_meta_query, WordPress.DB.SlowDBQuery.slow_db_query_tax_query
         $pool = new WP_Query( $args );
-        $matches = array();
         $check_dates = $input['check_in'] !== '' && $input['check_out'] !== '';
+        $room_ids = array();
         foreach ( $pool->posts as $room_id ) {
-            if ( count( $matches ) >= self::MAX_MATCHES ) {
-                break;
-            }
+            $room_id = intval( $room_id );
             if ( $check_dates && function_exists( 'wpestate_check_booking_valability' ) ) {
                 try {
                     $available = wpestate_check_booking_valability(
@@ -459,9 +570,66 @@ class QuoteAjax {
                     continue;
                 }
             }
-            $matches[] = $this->match_data( intval( $room_id ) );
+            $room_ids[] = $room_id;
+        }
+        if ( Settings::get( 'search_result' ) !== 'listings' ) {
+            return $this->hotel_matches( $room_ids );
+        }
+        $matches = array();
+        foreach ( $room_ids as $room_id ) {
+            if ( count( $matches ) >= self::MAX_MATCHES ) {
+                break;
+            }
+            $matches[] = $this->match_data( $room_id );
         }
         return $matches;
+    }
+
+    /**
+     * Group matching rooms by hotel for hotel-mode suggestions.
+     *
+     * Rooms are cheapest-first, so hotels keep that order. Rooms without
+     * a hotel link are skipped: in hotels mode there is nothing to show
+     * them on.
+     *
+     * @param int[] $room_ids Available matching room IDs.
+     * @return array<int,array<string,mixed>> Hotel match list.
+     */
+    private function hotel_matches( $room_ids ) {
+        $by_hotel = array();
+        foreach ( $room_ids as $room_id ) {
+            $hotel_id = Repository::get_room_hotel_id( $room_id );
+            if ( $hotel_id <= 0 ) {
+                continue;
+            }
+            if ( ! isset( $by_hotel[ $hotel_id ] ) ) {
+                $by_hotel[ $hotel_id ] = array();
+            }
+            $by_hotel[ $hotel_id ][] = $room_id;
+        }
+        $matches = array();
+        foreach ( $by_hotel as $hotel_id => $rooms ) {
+            if ( count( $matches ) >= self::MAX_MATCHES ) {
+                break;
+            }
+            $matches[] = $this->hotel_match_data( $hotel_id, $rooms );
+        }
+        return $matches;
+    }
+
+    /**
+     * Plain-text post title for JSON and email contexts.
+     *
+     * The_title filters (wptexturize) turn quotes into entities
+     * (`Cox&#8217;s Bazar`). Browsers decode those in HTML, but React
+     * text nodes and plain-text emails would show them literally —
+     * decode first.
+     *
+     * @param int $post_id Post ID.
+     * @return string Decoded title.
+     */
+    private static function plain_title( $post_id ) {
+        return html_entity_decode( get_the_title( intval( $post_id ) ), ENT_QUOTES, 'UTF-8' );
     }
 
     /**
@@ -473,13 +641,49 @@ class QuoteAjax {
     private function match_data( $room_id ) {
         $price = floatval( get_post_meta( $room_id, 'property_price', true ) );
         $thumb = get_the_post_thumbnail_url( $room_id, 'medium' );
+        $original = Repository::get_original_price( $room_id );
         return array(
             'id'     => $room_id,
-            'title'  => get_the_title( $room_id ),
+            'kind'   => 'room',
+            'title'  => self::plain_title( $room_id ),
             'url'    => get_permalink( $room_id ),
             'image'  => $thumb !== false ? $thumb : '',
             'price'  => $price > 0 ? Repository::format_price( $price ) : '',
+            'was'    => $original > $price ? Repository::format_price( $original ) : '',
             'guests' => intval( get_post_meta( $room_id, 'guest_no', true ) ),
+            'rooms'  => 0,
+        );
+    }
+
+    /**
+     * Build one hotel match entry for the browser.
+     *
+     * Price is the hotel's synced minimum; the image falls back to the
+     * first matching room when the hotel has no featured image. The
+     * struck-through price mirrors the hotel cards: the original price
+     * of the cheapest matching room, shown only when it beats the min.
+     *
+     * @param int   $hotel_id Hotel post ID.
+     * @param int[] $room_ids Available matching room IDs in the hotel.
+     * @return array<string,mixed> Match data.
+     */
+    private function hotel_match_data( $hotel_id, $room_ids ) {
+        $price = Repository::get_min_price( $hotel_id );
+        $thumb = get_the_post_thumbnail_url( $hotel_id, 'medium' );
+        if ( false === $thumb && isset( $room_ids[0] ) ) {
+            $thumb = get_the_post_thumbnail_url( intval( $room_ids[0] ), 'medium' );
+        }
+        $original = isset( $room_ids[0] ) ? Repository::get_original_price( intval( $room_ids[0] ) ) : 0;
+        return array(
+            'id'     => $hotel_id,
+            'kind'   => 'hotel',
+            'title'  => self::plain_title( $hotel_id ),
+            'url'    => get_permalink( $hotel_id ),
+            'image'  => false !== $thumb ? $thumb : '',
+            'price'  => $price > 0 ? Repository::format_price( $price ) : '',
+            'was'    => $original > $price ? Repository::format_price( $original ) : '',
+            'guests' => 0,
+            'rooms'  => count( $room_ids ),
         );
     }
 
@@ -504,7 +708,7 @@ class QuoteAjax {
 				'post_status' => 'publish',
             )
         );
-        if ( $request_id <= 0 ) {
+        if ( is_wp_error( $request_id ) || $request_id <= 0 ) {
             return 0;
         }
         foreach ( array( 'city', 'location_text', 'check_in', 'check_out', 'rooms', 'guests', 'male', 'female', 'budget_min', 'budget_max', 'name', 'email', 'phone', 'requirements' ) as $key ) {
@@ -512,6 +716,7 @@ class QuoteAjax {
         }
         update_post_meta( $request_id, '_ssc_status', 'pending' );
         update_post_meta( $request_id, '_ssc_matched', wp_list_pluck( $matches, 'id' ) );
+        update_post_meta( $request_id, '_ssc_selected', isset( $input['selected_rooms'] ) && is_array( $input['selected_rooms'] ) ? array_values( array_map( 'intval', $input['selected_rooms'] ) ) : array() );
         return intval( $request_id );
     }
 
@@ -542,7 +747,7 @@ class QuoteAjax {
         $parts = array();
         foreach ( array_unique( $ids ) as $room_id ) {
             $count = isset( $qty[ $room_id ] ) ? max( 1, intval( $qty[ $room_id ] ) ) : 1;
-            $parts[] = $count . 'x ' . get_the_title( $room_id );
+            $parts[] = $count . 'x ' . self::plain_title( $room_id );
         }
         $line = __( 'Selected rooms: ', 'staysuite-companion' ) . implode( ', ', $parts );
         $total = isset( $input['total_estimate'] ) ? floatval( $input['total_estimate'] ) : 0;
@@ -565,6 +770,8 @@ class QuoteAjax {
         if ( $request_id <= 0 ) {
             return;
         }
+        $selected = isset( $input['selected_rooms'] ) && is_array( $input['selected_rooms'] ) ? $input['selected_rooms'] : array();
+        $has_email = is_email( $input['email'] );
         $lines = array(
             sprintf(
                 /* translators: %s: visitor name. */
@@ -574,7 +781,7 @@ class QuoteAjax {
             sprintf(
                 /* translators: %s: visitor email. */
                 __( 'Email: %s', 'staysuite-companion' ),
-                $input['email']
+                $has_email ? $input['email'] : __( '(none given — call the visitor)', 'staysuite-companion' )
             ),
             sprintf(
                 /* translators: %s: visitor phone. */
@@ -617,13 +824,18 @@ class QuoteAjax {
                 count( $matches )
             ),
             sprintf(
+                /* translators: %d: number of visitor-selected properties. */
+                __( 'Selected by visitor: %d', 'staysuite-companion' ),
+                count( $selected )
+            ),
+            sprintf(
                 /* translators: %s: edit-post URL. */
                 __( 'Review: %s', 'staysuite-companion' ),
                 get_edit_post_link( $request_id, 'display' )
             ),
         );
         $headers = array( 'Content-Type: text/plain; charset=UTF-8' );
-        if ( is_email( $input['email'] ) ) {
+        if ( $has_email ) {
             $headers[] = 'Reply-To: ' . $input['email'];
         }
         wp_mail(
@@ -637,6 +849,9 @@ class QuoteAjax {
             implode( "\n", $lines ),
             $headers
         );
+        if ( ! $has_email ) {
+            return;
+        }
         wp_mail(
             $input['email'],
             sprintf(

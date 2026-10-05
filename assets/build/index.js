@@ -18,13 +18,17 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__);
 
 /**
- * Group booking extras form.
+ * Group booking flow in two steps.
  *
- * When mounted next to a theme search bar in Group mode, location, dates
- * and guests are read live from the theme fields (autocomplete,
- * datepickers and guest logic included) and this form collects only the
- * group-specific extras. Standalone (shortcode/block without a theme
- * search nearby) it renders its own Where/dates/guests fields.
+ * Step 1 (anonymous): trip details only — location, dates and guests come
+ * live from the nearby theme search when there is one (external mode),
+ * otherwise from the form's own Where/dates/guests fields. Submitting
+ * fetches suggested stays via ssc_group_suggest; nothing is stored.
+ *
+ * Step 2 (quote): the visitor picks stays of interest and leaves contact
+ * details (which field is mandatory follows Settings → Required contact).
+ * Submitting sends everything via ssc_group_quote, which stores the
+ * request and notifies the admin.
  */
 
 
@@ -55,6 +59,16 @@ function readThemeField(root, name) {
   const field = root.querySelector(`[name="${name}"]`);
   return field ? field.value : '';
 }
+
+/**
+ * Which contact field the quote requires (Settings → Required contact).
+ *
+ * @return {string} 'email', 'phone' or 'both'.
+ */
+function contactMode() {
+  const mode = typeof sscBooking !== 'undefined' ? sscBooking.contact_required : 'email';
+  return mode === 'phone' || mode === 'both' ? mode : 'email';
+}
 const initialForm = {
   city: '',
   check_in: '',
@@ -72,84 +86,117 @@ const initialForm = {
   // Honeypot: bots fill it, humans never see it (server rejects non-empty).
   ssc_company: ''
 };
-function BookingForm({
-  title
-}) {
-  const [form, setForm] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(initialForm);
-  const [external, setExternal] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-  const [state, setState] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({
-    status: 'idle',
-    message: '',
-    matches: [],
-    total: 0
+
+/**
+ * Smooth-scroll the Individual/Group capsule into view.
+ *
+ * No-op outside the homepage (standalone shortcode/block pages have no
+ * capsule mount). Offset clears the sticky header, mirroring SearchMode.
+ *
+ * @return {void}
+ */
+function scrollToMode() {
+  const toggle = document.querySelector('[data-ssc-mode]');
+  if (!toggle) {
+    return;
+  }
+  const sticky = document.querySelector('.header_wrapper.navbar-fixed-top');
+  const offset = (sticky ? sticky.offsetHeight : 80) + 16;
+  const y = toggle.getBoundingClientRect().top + window.scrollY - offset;
+  requestAnimationFrame(() => {
+    window.scrollTo({
+      top: Math.max(y, 0),
+      behavior: 'smooth'
+    });
   });
-  const set = key => event => {
-    setForm(prev => ({
-      ...prev,
-      [key]: event.target.value
-    }));
-  };
-  const handleResult = res => {
-    if (res && res.success) {
-      setState({
-        status: 'done',
-        message: '',
-        matches: res.data.matches || [],
-        total: res.data.total || 0
-      });
-    } else {
-      setState({
-        status: 'error',
-        message: res && res.data && res.data.message || (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Something went wrong. Please try again.', 'staysuite-companion'),
-        matches: [],
-        total: 0
-      });
-    }
-  };
-  const sendQuote = (payload, retried) => {
+}
+
+/**
+ * POST an action to admin-ajax, refreshing a stale nonce once.
+ *
+ * @param {string} action AJAX action.
+ * @param {Object} payload Form payload.
+ * @return {Promise<Object>} Parsed JSON response.
+ */
+function postAction(action, payload) {
+  const send = retried => {
     const body = new URLSearchParams();
-    body.append('action', 'ssc_group_quote');
+    body.append('action', action);
     body.append('nonce', sscBooking.quote_nonce);
-    Object.entries(payload).forEach(([key, value]) => body.append(key, value));
-    fetch(sscBooking.ajaxurl, {
+    Object.entries(payload).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        value.forEach(item => body.append(`${key}[]`, item));
+      } else {
+        body.append(key, value);
+      }
+    });
+    return fetch(sscBooking.ajaxurl, {
       method: 'POST',
       credentials: 'same-origin',
       body
     }).then(response => response.json()).then(res => {
       // Cached pages carry stale nonces: refresh once and retry.
       if (res && !res.success && res.data && res.data.code === 'ssc_nonce_expired' && !retried) {
-        refreshNonceAndRetry(payload);
-        return;
+        const refresh = new URLSearchParams();
+        refresh.append('action', 'ssc_quote_nonce');
+        return fetch(sscBooking.ajaxurl, {
+          method: 'POST',
+          credentials: 'same-origin',
+          body: refresh
+        }).then(response => response.json()).then(nonceRes => {
+          if (nonceRes && nonceRes.success && nonceRes.data && nonceRes.data.nonce) {
+            sscBooking.quote_nonce = nonceRes.data.nonce;
+            return send(true);
+          }
+          return res;
+        }).catch(() => res);
       }
-      handleResult(res);
-    }).catch(() => handleResult(null));
-  };
-  const refreshNonceAndRetry = payload => {
-    const refresh = new URLSearchParams();
-    refresh.append('action', 'ssc_quote_nonce');
-    fetch(sscBooking.ajaxurl, {
-      method: 'POST',
-      credentials: 'same-origin',
-      body: refresh
-    }).then(response => response.json()).then(res => {
-      if (res && res.success && res.data && res.data.nonce) {
-        sscBooking.quote_nonce = res.data.nonce;
-        sendQuote(payload, true);
-      } else {
-        handleResult(res);
-      }
-    }).catch(() => handleResult(null));
-  };
-  const doSubmit = () => {
-    setState({
-      status: 'loading',
-      message: '',
-      matches: [],
-      total: 0
+      return res;
     });
+  };
+  return send(false).catch(() => null);
+}
+function BookingForm({
+  title
+}) {
+  const [form, setForm] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(initialForm);
+  const [external, setExternal] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const [phase, setPhase] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)('search');
+  const [matches, setMatches] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
+  const [total, setTotal] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(0);
+  const [trip, setTripState] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
+  const [selected, setSelected] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
+  const [busy, setBusy] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const [error, setError] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)('');
+  const [requestId, setRequestId] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(0);
+  const mode = contactMode();
+  const needEmail = mode === 'email' || mode === 'both';
+  const needPhone = mode === 'phone' || mode === 'both';
+  const set = key => event => {
+    setForm(prev => ({
+      ...prev,
+      [key]: event.target.value
+    }));
+  };
+  const setTrip = key => event => {
+    setTripState(prev => ({
+      ...prev,
+      [key]: event.target.value
+    }));
+  };
+  const tripPayload = () => {
     const themeSearch = findThemeSearch();
     const payload = {
-      ...form
+      city: form.city,
+      check_in: form.check_in,
+      check_out: form.check_out,
+      rooms: form.rooms,
+      guests: form.guests,
+      male: form.male,
+      female: form.female,
+      budget_min: form.budget_min,
+      budget_max: form.budget_max,
+      ssc_company: form.ssc_company
     };
     if (themeSearch) {
       payload.location_text = readThemeField(themeSearch, 'search_location');
@@ -159,33 +206,145 @@ function BookingForm({
       payload.guests = themeGuests > 0 ? String(themeGuests) : form.guests;
       payload.city = '';
     }
-    sendQuote(payload, false);
+    return payload;
   };
-  const submitRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
-  submitRef.current = doSubmit;
+  const suggest = () => {
+    setBusy(true);
+    setError('');
+    const payload = tripPayload();
+    postAction('ssc_group_suggest', payload).then(res => {
+      setBusy(false);
+      if (res && res.success) {
+        setMatches(res.data.matches || []);
+        setTotal(res.data.total || 0);
+        setTripState(payload);
+        setPhase('results');
+      } else {
+        setError(res && res.data && res.data.message || (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Something went wrong. Please try again.', 'staysuite-companion'));
+      }
+    });
+  };
+  const quote = () => {
+    setBusy(true);
+    setError('');
+    const snapshot = trip || tripPayload();
+    const base = external ? {
+      ...snapshot,
+      ...themeTrip()
+    } : snapshot;
+    postAction('ssc_group_quote', {
+      ...base,
+      selected_rooms: selected,
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      requirements: form.requirements
+    }).then(res => {
+      setBusy(false);
+      if (res && res.success) {
+        setRequestId(res.data.request_id || 0);
+        setPhase('done');
+        scrollToMode();
+      } else {
+        setError(res && res.data && res.data.message || (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Something went wrong. Please try again.', 'staysuite-companion'));
+      }
+    });
+  };
+
+  // Where/dates always come from the theme search above when there is
+  // one; only Rooms/Guests/Budget are tweaked here.
+  const themeTrip = () => {
+    const themeSearch = findThemeSearch();
+    if (!themeSearch) {
+      return {};
+    }
+    return {
+      location_text: readThemeField(themeSearch, 'search_location'),
+      check_in: readThemeField(themeSearch, 'check_in'),
+      check_out: readThemeField(themeSearch, 'check_out'),
+      city: ''
+    };
+  };
+
+  // Re-run suggestions from the edited trip prefs; picks reset because
+  // the stay list changes.
+  const refresh = () => {
+    if (!trip) {
+      return;
+    }
+    setBusy(true);
+    setError('');
+    postAction('ssc_group_suggest', {
+      ...trip,
+      ...themeTrip()
+    }).then(res => {
+      setBusy(false);
+      if (res && res.success) {
+        setMatches(res.data.matches || []);
+        setTotal(res.data.total || 0);
+        setSelected([]);
+      } else {
+        setError(res && res.data && res.data.message || (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Something went wrong. Please try again.', 'staysuite-companion'));
+      }
+    });
+  };
+  const suggestRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
+  suggestRef.current = suggest;
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     setExternal(!!findThemeSearch());
+    // The theme search submit (Individual mode's Search button is hidden
+    // in group mode) routes into the suggestion step.
     const trigger = event => {
       event.preventDefault();
-      if (submitRef.current) {
-        submitRef.current();
+      if (suggestRef.current) {
+        suggestRef.current();
       }
     };
     window.addEventListener('ssc-group-quote-submit', trigger);
     return () => window.removeEventListener('ssc-group-quote-submit', trigger);
   }, []);
-  const submit = event => {
-    event.preventDefault();
-    doSubmit();
+  const toggleSelected = id => {
+    setSelected(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
   };
   const cities = sscBooking.cities || [];
+
+  // Red asterisk marking mandatory fields.
+  const req = (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
+    className: "ssc-required",
+    "aria-hidden": "true"
+  }, "*");
+
+  // Channel wording follows the Required contact setting.
+  const channel = mode === 'both' ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('email or phone', 'staysuite-companion') : mode === 'phone' ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('phone', 'staysuite-companion') : (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('email', 'staysuite-companion');
+
+  // One merged status line inside the contact card (never floating text).
+  let statusLine = '';
+  if (total === 0) {
+    statusLine = (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.sprintf)((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('No stays matched your dates and budget — leave your details and our team will still quote you by %s.', 'staysuite-companion'), channel);
+  } else if (selected.length > 0) {
+    statusLine = (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.sprintf)((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('%d stay(s) selected — one combined quote, no payment today.', 'staysuite-companion'), selected.length);
+  } else {
+    statusLine = (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('No stays ticked — we will quote generally for your dates and budget.', 'staysuite-companion');
+  }
+  if (phase === 'done') {
+    return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+      className: "ssc-booking-form-wrap"
+    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+      className: "ssc-booking-done"
+    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h3", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Request received', 'staysuite-companion')), requestId > 0 && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+      className: "ssc-booking-ref"
+    }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.sprintf)((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Your reference: #%d', 'staysuite-companion'), requestId)), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("ol", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('We confirm availability for your dates and party.', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, needEmail ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('You get the group quote by email.', 'staysuite-companion') : (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('We call you with the group quote.', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("li", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('You pay the quote link — nothing is booked or charged today.', 'staysuite-companion')))));
+  }
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "ssc-booking-form-wrap"
-  }, title && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
+  }, title && phase === 'search' && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
     className: "ssc-booking-title"
-  }, title), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("form", {
+  }, title), phase === 'search' && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("form", {
     className: "ssc-booking-form",
-    onSubmit: submit
+    onSubmit: event => {
+      event.preventDefault();
+      suggest();
+    }
   }, !external && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Where?', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("select", {
     value: form.city,
     onChange: set('city')
@@ -202,13 +361,13 @@ function BookingForm({
     type: "date",
     value: form.check_out,
     onChange: set('check_out')
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Guests', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Guests', 'staysuite-companion'), " ", req), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
     type: "number",
     min: "1",
     value: form.guests,
     onChange: set('guests'),
     required: true
-  }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Rooms', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+  }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Rooms', 'staysuite-companion'), " ", req), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
     type: "number",
     min: "1",
     value: form.rooms,
@@ -238,32 +397,11 @@ function BookingForm({
     value: form.budget_max,
     onChange: set('budget_max'),
     placeholder: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Per night', 'staysuite-companion')
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Your name', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
-    type: "text",
-    value: form.name,
-    onChange: set('name'),
-    required: true
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Email', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
-    type: "email",
-    value: form.email,
-    onChange: set('email'),
-    required: true
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Phone', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
-    type: "tel",
-    value: form.phone,
-    onChange: set('phone')
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
-    className: "ssc-booking-full"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Extra requirements', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("textarea", {
-    rows: "4",
-    value: form.requirements,
-    onChange: set('requirements'),
-    placeholder: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Food, transport, event hall — anything we should quote for…', 'staysuite-companion')
   })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
     type: "submit",
     className: "ssc-booking-submit",
-    disabled: state.status === 'loading'
-  }, state.status === 'loading' ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Finding stays…', 'staysuite-companion') : (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Get quote', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    disabled: busy
+  }, busy ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Finding stays…', 'staysuite-companion') : (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Find stays', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
     type: "text",
     name: "ssc_company",
     value: form.ssc_company,
@@ -277,26 +415,126 @@ function BookingForm({
       opacity: 0,
       height: 0
     }
-  })), state.status === 'error' && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+  })), error && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
     className: "ssc-booking-error"
-  }, state.message), state.status === 'done' && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, error), phase === 'results' && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "ssc-booking-results"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h3", null, state.total > 0 ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Suggested stays in your budget', 'staysuite-companion') : (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('No stays matched — our team will still quote you by email.', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+  }, total > 0 && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "ssc-booking-results-head"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h3", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Suggested stays in your budget', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    className: "ssc-booking-hint"
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Nothing is booked today — tick the stays you like and request one combined group quote.', 'staysuite-companion'))), total > 0 && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "ssc-booking-grid"
-  }, state.matches.map(match => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("article", {
-    key: match.id,
-    className: "ssc-booking-card"
-  }, match.image && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
-    href: match.url
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("img", {
-    src: match.image,
-    alt: "",
-    loading: "lazy"
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h4", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
-    href: match.url
-  }, match.title)), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "ssc-booking-card-meta"
-  }, [match.price && `${match.price}`, match.guests > 0 && `${match.guests} guests`].filter(Boolean).join(' · ')))))));
+  }, matches.map(match => {
+    const active = selected.includes(match.id);
+    return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("article", {
+      key: match.id,
+      className: `ssc-booking-card${active ? ' ssc-selected' : ''}`
+    }, match.image && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
+      href: match.url,
+      target: "_blank",
+      rel: "noopener noreferrer"
+    }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("img", {
+      src: match.image,
+      alt: "",
+      loading: "lazy"
+    })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h4", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
+      href: match.url,
+      target: "_blank",
+      rel: "noopener noreferrer"
+    }, match.title)), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+      className: "ssc-booking-card-meta"
+    }, match.was && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", {
+      className: "ssc-price-was"
+    }, match.was, " "), [match.price && `${match.price}`, match.kind === 'hotel' && match.rooms > 0 && (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.sprintf)(/* translators: %d: number of matching rooms. */
+    (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__._n)('%d matching room', '%d matching rooms', match.rooms, 'staysuite-companion'), match.rooms), match.kind !== 'hotel' && match.guests > 0 && (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.sprintf)((0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('%d guests', 'staysuite-companion'), match.guests)].filter(Boolean).join(' · ')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+      type: "button",
+      className: `ssc-card-toggle${active ? ' ssc-active' : ''}`,
+      "aria-pressed": active,
+      onClick: () => toggleSelected(match.id)
+    }, active ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Added to request', 'staysuite-companion') : (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Add to request', 'staysuite-companion')));
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("form", {
+    className: "ssc-booking-form ssc-booking-contact",
+    onSubmit: event => {
+      event.preventDefault();
+      quote();
+    }
+  }, trip && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "ssc-booking-full ssc-booking-trip-edit"
+  }, !external && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Where', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("select", {
+    value: trip.city || '',
+    onChange: setTrip('city')
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
+    value: ""
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Anywhere', 'staysuite-companion')), cities.map(city => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
+    key: city.slug,
+    value: city.slug
+  }, city.name)))), !external && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Check in', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    type: "text",
+    value: trip.check_in || '',
+    onChange: setTrip('check_in')
+  })), !external && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Check out', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    type: "text",
+    value: trip.check_out || '',
+    onChange: setTrip('check_out')
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Rooms', 'staysuite-companion'), " ", req), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    type: "number",
+    min: "1",
+    value: trip.rooms,
+    onChange: setTrip('rooms'),
+    required: true
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Guests', 'staysuite-companion'), " ", req), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    type: "number",
+    min: "1",
+    value: trip.guests,
+    onChange: setTrip('guests'),
+    required: true
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Budget min', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    type: "number",
+    min: "0",
+    value: trip.budget_min,
+    onChange: setTrip('budget_min'),
+    placeholder: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Per night', 'staysuite-companion')
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Budget max', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    type: "number",
+    min: "0",
+    value: trip.budget_max,
+    onChange: setTrip('budget_max'),
+    placeholder: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Per night', 'staysuite-companion')
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    type: "button",
+    className: "ssc-booking-refresh",
+    onClick: refresh,
+    disabled: busy
+  }, busy ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Updating…', 'staysuite-companion') : (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Update stays', 'staysuite-companion'))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
+    className: "ssc-booking-full ssc-booking-selection"
+  }, statusLine), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Your name', 'staysuite-companion'), " ", req), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    type: "text",
+    value: form.name,
+    onChange: set('name'),
+    required: true
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Email', 'staysuite-companion'), " ", needEmail ? req : ` (${(0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('optional', 'staysuite-companion')})`), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    type: "email",
+    value: form.email,
+    onChange: set('email'),
+    required: needEmail
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Phone', 'staysuite-companion'), " ", needPhone ? req : ` (${(0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('optional', 'staysuite-companion')})`), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    type: "tel",
+    value: form.phone,
+    onChange: set('phone'),
+    required: needPhone
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
+    className: "ssc-booking-full"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Extra requirements', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("textarea", {
+    rows: "4",
+    value: form.requirements,
+    onChange: set('requirements'),
+    placeholder: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Food, transport, event hall — anything we should quote for…', 'staysuite-companion')
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    type: "submit",
+    className: "ssc-booking-submit",
+    disabled: busy
+  }, busy ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Sending…', 'staysuite-companion') : (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Request group quote', 'staysuite-companion')))));
 }
 
 /***/ },
@@ -528,9 +766,10 @@ __webpack_require__.r(__webpack_exports__);
 /**
  * Individual / Group switch mounted above a theme search bar.
  *
- * Group mode hides the search bar with an animated collapse and portals
- * the group quote form to a sibling node AFTER the cover, so the cover
- * never stretches and the form spans the content width.
+ * Group mode keeps the search bar visible (its submit is hidden by CSS
+ * and routed into the quote flow) and portals the group quote form to a
+ * sibling node AFTER the cover, so the cover never stretches and the
+ * form spans the content width.
  */
 
 
@@ -549,7 +788,7 @@ function SearchMode({
     if (mode !== 'group') {
       return undefined;
     }
-    // Route the theme search submit into the group quote flow.
+    // Route the theme search submit into the stays suggestion step.
     const form = wrapper.querySelector('form');
     if (!form) {
       return undefined;

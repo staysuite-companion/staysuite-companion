@@ -177,6 +177,19 @@ function SettingsTab() {
                     onChange={set('group_selection')}
                 />
             </Row>
+            <Row
+                label={__('Required contact', 'staysuite-companion')}
+                hint={__('Which contact field the group quote form requires. Phone numbers are never format-checked, only required.', 'staysuite-companion')}
+            >
+                <select
+                    value={['email', 'phone', 'both'].includes(settings.contact_required) ? settings.contact_required : 'email'}
+                    onChange={(e) => set('contact_required')(e.target.value)}
+                >
+                    <option value="email">{__('Email only', 'staysuite-companion')}</option>
+                    <option value="phone">{__('Phone only', 'staysuite-companion')}</option>
+                    <option value="both">{__('Email and phone', 'staysuite-companion')}</option>
+                </select>
+            </Row>
             <h2>{__('Search colors', 'staysuite-companion')}</h2>
             <Row label={__('Color source', 'staysuite-companion')}>
                 <label style={{ display: 'block', marginBottom: '8px' }}>

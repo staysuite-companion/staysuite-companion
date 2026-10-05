@@ -68,6 +68,7 @@ class Settings {
             'delete_on_uninstall' => 0,
             'search_result'       => 'hotels',
             'group_selection'     => 1,
+            'contact_required'    => 'email',
         );
     }
 
@@ -90,6 +91,7 @@ class Settings {
         $all['delete_on_uninstall'] = ! empty( $all['delete_on_uninstall'] ) ? 1 : 0;
         $all['search_result'] = ( $all['search_result'] === 'listings' ) ? 'listings' : 'hotels';
         $all['group_selection'] = ! empty( $all['group_selection'] ) ? 1 : 0;
+        $all['contact_required'] = in_array( $all['contact_required'], array( 'email', 'phone', 'both' ), true ) ? $all['contact_required'] : 'email';
         if ( $key === null ) {
             return $all;
         }
@@ -135,6 +137,7 @@ class Settings {
             'delete_on_uninstall' => ! empty( $raw['delete_on_uninstall'] ) ? 1 : 0,
             'search_result'  => ( isset( $raw['search_result'] ) && $raw['search_result'] === 'listings' ) ? 'listings' : 'hotels',
             'group_selection' => ! empty( $raw['group_selection'] ) ? 1 : 0,
+            'contact_required' => ( isset( $raw['contact_required'] ) && in_array( $raw['contact_required'], array( 'email', 'phone', 'both' ), true ) ) ? $raw['contact_required'] : 'email',
         );
     }
 
