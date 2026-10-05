@@ -526,7 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const proActive = root.dataset.pro === '1';
   const base = [{
     slug: 'settings',
-    title: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Settings', 'staysuite-companion'),
+    title: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('General', 'staysuite-companion'),
     render: SettingsTab
   }];
   if (!proActive) {

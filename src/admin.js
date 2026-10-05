@@ -347,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     const proActive = root.dataset.pro === '1';
-    const base = [{ slug: 'settings', title: __('Settings', 'staysuite-companion'), render: SettingsTab }];
+    const base = [{ slug: 'settings', title: __('General', 'staysuite-companion'), render: SettingsTab }];
     if (!proActive) {
         base.push({ slug: 'go-pro', title: __('Go Pro', 'staysuite-companion'), render: GoProTab });
     }

@@ -48,8 +48,30 @@ class RequestCPT {
         add_action( 'init', array( __CLASS__, 'register' ) );
         add_action( 'add_meta_boxes', array( $this, 'add_meta_box' ) );
         add_action( 'save_post', array( $this, 'save_status' ) );
+        add_action( 'admin_footer', array( $this, 'back_to_list' ) );
         add_filter( 'manage_' . self::POST_TYPE . '_posts_columns', array( $this, 'add_list_columns' ) );
         add_action( 'manage_' . self::POST_TYPE . '_posts_custom_column', array( $this, 'render_list_column' ), 10, 2 );
+    }
+
+    /**
+     * Back-to-list button beside the Add New Request action on the edit screen.
+     *
+     * WordPress prints the h1 + its page-title-action buttons with no
+     * hookable spot, so we inject ours next to them in admin_footer.
+     *
+     * @param WP_Post $post Current request post (unused, see admin_footer).
+     * @return void
+     */
+    public function back_to_list() {
+        $screen = get_current_screen();
+        if ( ! $screen || $screen->base !== 'post' || $screen->post_type !== self::POST_TYPE ) {
+            return;
+        }
+        printf(
+            '<script>document.addEventListener("DOMContentLoaded",function(){var h=document.querySelector("h1.wp-heading-inline");if(!h){return;}var a=document.createElement("a");a.className="page-title-action";a.href=%s;a.textContent=%s;h.parentNode.insertBefore(a,h.nextSibling);});</script>',
+            wp_json_encode( admin_url( 'edit.php?post_type=' . self::POST_TYPE ) ),
+            wp_json_encode( __( '← All group requests', 'staysuite-companion' ) )
+        );
     }
 
     /**
@@ -68,6 +90,7 @@ class RequestCPT {
             self::POST_TYPE, array(
 				'labels' => array(
 					'name'               => esc_html__( 'Group Requests', 'staysuite-companion' ),
+					'menu_name'          => esc_html__( 'Requests', 'staysuite-companion' ),
 					'singular_name'      => esc_html__( 'Group Request', 'staysuite-companion' ),
 					'add_new'            => esc_html__( 'Add New', 'staysuite-companion' ),
 					'add_new_item'       => esc_html__( 'Add New Request', 'staysuite-companion' ),

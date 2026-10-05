@@ -155,8 +155,10 @@ class Settings {
     /**
      * Register the StaySuite top-level menu (below Hotels).
      *
-     * The page itself is the tab shell; each tab also gets a submenu
-     * entry deep-linking via ?tab= so sections stay discoverable.
+     * Two submenus: Settings (the single-page tab shell) and Group
+     * Requests (the CPT list, registered by RequestCPT). Deep links for
+     * License/AI and Go Pro live as tabs inside the Settings shell, not
+     * as their own submenu entries.
      *
      * @return void
      */
@@ -183,17 +185,6 @@ class Settings {
         $first = $submenu[ self::MENU_SLUG ][0] ?? null;
         if ( is_array( $first ) && ( $first[2] ?? '' ) === self::MENU_SLUG ) {
             unset( $submenu[ self::MENU_SLUG ][0] );
-        }
-
-        if ( ! defined( 'SSC_PRO_VERSION' ) ) {
-            add_submenu_page(
-                self::MENU_SLUG,
-                esc_html__( 'Go Pro', 'staysuite-companion' ),
-                esc_html__( 'Go Pro', 'staysuite-companion' ),
-                'manage_options',
-                self::MENU_SLUG . '&tab=go-pro',
-                array( $this, 'render_page' )
-            );
         }
     }
 
@@ -222,6 +213,14 @@ class Settings {
     public function highlight_tab( $submenu_file, $parent_file ) {
         // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only menu highlight; the Settings screen itself is capability + nonce protected.
         if ( $parent_file !== self::MENU_SLUG ) {
+            return $submenu_file;
+        }
+        // Only force the Settings tab-highlight while actually on the
+        // StaySuite settings page. On its CPT screens (Group Requests
+        // list/edit, future subscreens) keep whatever WordPress picked,
+        // otherwise Settings always looks active.
+        $page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+        if ( $page !== self::MENU_SLUG ) {
             return $submenu_file;
         }
         if ( ! isset( $_GET['tab'] ) ) {
