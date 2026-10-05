@@ -8,3 +8,11 @@
         width: 100%;
     }
 }
+
+/* Hotel cards show the lowest room price, so it reads as a starting price. */
+.ssc-price-from {
+    font-size: 12px;
+    font-weight: 400;
+    opacity: 0.7;
+    margin-right: 2px;
+}

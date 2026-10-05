@@ -486,6 +486,7 @@ class Renderer {
             include $card;
             $html = (string) ob_get_clean();
             $html = self::inject_hotel_search_meta( $html, $hotel->ID );
+            $html = self::inject_hotel_price_prefix( $html, $hotel->ID );
         }
         // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Restores the global saved before the swap.
         $post = $previous;
@@ -565,6 +566,32 @@ class Renderer {
             1
         );
         return is_string( $stripped ) ? $stripped : $card_html;
+    }
+
+    /**
+     * Prefix a hotel card's price with "From".
+     *
+     * The synced property_price is the lowest room price, so the card
+     * price is a starting price. Skipped when the hotel has no price,
+     * mirroring the theme hiding the per-night label at zero.
+     *
+     * @param string $card_html Theme card HTML.
+     * @param int    $hotel_id  Hotel post ID.
+     * @return string Card HTML with the price prefix injected.
+     */
+    public static function inject_hotel_price_prefix( $card_html, $hotel_id ) {
+        $price = floatval( get_post_meta( intval( $hotel_id ), 'property_price', true ) );
+        if ( $price <= 0 ) {
+            return $card_html;
+        }
+        $from = '<span class="ssc-price-from">' . esc_html__( 'From', 'staysuite-companion' ) . '</span> ';
+        $prefixed = preg_replace(
+            '#(<div class="price_unit">)#',
+            '$1' . $from,
+            $card_html,
+            1
+        );
+        return is_string( $prefixed ) ? $prefixed : $card_html;
     }
 
     /**
