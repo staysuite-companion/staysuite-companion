@@ -303,6 +303,19 @@ body.ssc-homepage {
     }
 }
 
+/* The widget form — not .wpestate-adv-holder — is the flex parent of the
+   field columns (they are the form's children). The theme provides form
+   flex on the frontend, but theme CSS never loads in the editor canvas,
+   where the preview otherwise stacks every field full-width. Same values
+   as the theme rule, so frontend rendering is unchanged. */
+.ssc-hero .search_wr_elementor form,
+.ssc-hotel-search .search_wr_elementor form {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
 /* Field icons need explicit sizes: neither Elementor nor theme CSS
    loads for programmatic instances (editor iframe especially), so
    unsized SVGs would blow up to container width. */
@@ -315,6 +328,35 @@ body.ssc-homepage {
     width: 20px !important;
     height: 20px !important;
     flex-shrink: 0;
+}
+
+/* Field icons track the customizer accent via --ssc-search-icon (theme
+   colors them on the frontend; nothing does in the editor canvas). */
+.ssc-hero .search_wr_elementor .elementor_search_builder_field_wrapper > svg,
+.ssc-hotel-search .search_wr_elementor .elementor_search_builder_field_wrapper > svg {
+    fill: var(--ssc-search-icon, #137699);
+}
+
+/* Vertically centre field icons over their inputs. Mirrors the theme's
+   absolute positioning (theme CSS never loads in the editor canvas,
+   where static icons otherwise stack above the inputs). Same values,
+   so frontend rendering is unchanged. */
+.ssc-hero .search_wr_elementor .elementor_search_builder_field_wrapper,
+.ssc-hotel-search .search_wr_elementor .elementor_search_builder_field_wrapper {
+    position: relative;
+}
+
+.ssc-hero .search_wr_elementor .elementor_search_builder_field_wrapper > svg,
+.ssc-hero .search_wr_elementor .elementor_search_builder_field_wrapper > img,
+.ssc-hero .search_wr_elementor .elementor_search_builder_field_wrapper > i,
+.ssc-hotel-search .search_wr_elementor .elementor_search_builder_field_wrapper > svg,
+.ssc-hotel-search .search_wr_elementor .elementor_search_builder_field_wrapper > img,
+.ssc-hotel-search .search_wr_elementor .elementor_search_builder_field_wrapper > i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
 }
 
 .ssc-hero .search_wr_elementor .elementor_search_builder_field_wrapper > i,

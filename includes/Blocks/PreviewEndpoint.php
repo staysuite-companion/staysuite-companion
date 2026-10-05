@@ -156,7 +156,7 @@ class PreviewEndpoint {
         }
         return new WP_REST_Response(
             array(
-				'terms' => self::carousel_terms( $taxonomy ),
+				'terms' => self::carousel_terms( $taxonomy, $source ),
 				'posts' => self::carousel_posts( $source ),
             ), 200
         );
@@ -165,10 +165,14 @@ class PreviewEndpoint {
     /**
      * Terms for a carousel filter taxonomy.
      *
+     * Counts are scoped to the selected source: term->count mixes every
+     * post type, so hotel rows would otherwise show room counts.
+     *
      * @param string $taxonomy Taxonomy slug, empty for none.
+     * @param string $source   Carousel source (rooms|hotels).
      * @return array<int,array{slug:string,name:string,count:int}> Term options.
      */
-    private static function carousel_terms( $taxonomy ) {
+    private static function carousel_terms( $taxonomy, $source ) {
         if ( '' === $taxonomy || ! taxonomy_exists( $taxonomy ) ) {
             return array();
         }
@@ -177,13 +181,15 @@ class PreviewEndpoint {
 				'taxonomy'   => $taxonomy,
 				'hide_empty' => false,
 				'number'     => 200,
-				'orderby'    => 'count',
-				'order'      => 'DESC',
+				'orderby'    => 'name',
+				'order'      => 'ASC',
             )
         );
         if ( is_wp_error( $terms ) || ! is_array( $terms ) ) {
             return array();
         }
+        $post_type = 'hotels' === $source ? HotelCPT::POST_TYPE : 'estate_property';
+        $counts = self::term_post_counts( $taxonomy, $post_type );
         $options = array();
         foreach ( $terms as $term ) {
             if ( ! $term instanceof \WP_Term ) {
@@ -192,10 +198,52 @@ class PreviewEndpoint {
             $options[] = array(
 				'slug'  => $term->slug,
 				'name'  => $term->name,
-				'count' => intval( $term->count ),
+				'count' => isset( $counts[ intval( $term->term_id ) ] ) ? intval( $counts[ intval( $term->term_id ) ] ) : 0,
             );
         }
+        usort(
+            $options, function ( $a, $b ) {
+				if ( $a['count'] !== $b['count'] ) {
+					return $b['count'] - $a['count'];
+				}
+				return strcasecmp( $a['name'], $b['name'] );
+			}
+        );
         return $options;
+    }
+
+    /**
+     * Published post counts per term for one post type.
+     *
+     * No WP API returns per-term counts scoped to a single post type, so
+     * one grouped query does it for every term at once.
+     *
+     * @param string $taxonomy  Taxonomy slug.
+     * @param string $post_type Post type slug.
+     * @return array<int,int> Term ID => published post count.
+     */
+    private static function term_post_counts( $taxonomy, $post_type ) {
+        global $wpdb;
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery -- Single grouped count query; get_terms() counts mix every post type.
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT tt.term_id AS term_id, COUNT(*) AS posts_count FROM {$wpdb->term_relationships} AS tr INNER JOIN {$wpdb->term_taxonomy} AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id INNER JOIN {$wpdb->posts} AS p ON p.ID = tr.object_id WHERE tt.taxonomy = %s AND p.post_type = %s AND p.post_status = 'publish' GROUP BY tt.term_id",
+                $taxonomy,
+                $post_type
+            ),
+            ARRAY_A
+        );
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery
+        $counts = array();
+        if ( ! is_array( $rows ) ) {
+            return $counts;
+        }
+        foreach ( $rows as $row ) {
+            if ( isset( $row['term_id'], $row['posts_count'] ) ) {
+                $counts[ intval( $row['term_id'] ) ] = intval( $row['posts_count'] );
+            }
+        }
+        return $counts;
     }
 
     /**
