@@ -487,6 +487,7 @@ class Renderer {
             $html = (string) ob_get_clean();
             $html = self::inject_hotel_search_meta( $html, $hotel->ID );
             $html = self::inject_hotel_price_prefix( $html, $hotel->ID );
+            $html = self::inject_hotel_original_price( $html, $hotel->ID );
         }
         // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Restores the global saved before the swap.
         $post = $previous;
@@ -572,8 +573,11 @@ class Renderer {
      * Prefix a hotel card's price with "From".
      *
      * The synced property_price is the lowest room price, so the card
-     * price is a starting price. Skipped when the hotel has no price,
-     * mirroring the theme hiding the per-night label at zero.
+     * price is a starting price. The theme prints the price twice per
+     * card (slider overlay and body), so every price div gets the prefix —
+     * whichever one the card style shows reads "From …". Skipped when the
+     * hotel has no price, mirroring the theme hiding the per-night label
+     * at zero.
      *
      * @param string $card_html Theme card HTML.
      * @param int    $hotel_id  Hotel post ID.
@@ -588,10 +592,42 @@ class Renderer {
         $prefixed = preg_replace(
             '#(<div class="price_unit">)#',
             '$1' . $from,
-            $card_html,
-            1
+            $card_html
         );
         return is_string( $prefixed ) ? $prefixed : $card_html;
+    }
+
+    /**
+     * Show the cheapest room's pre-discount price struck through on hotel cards.
+     *
+     * Mirrors the room rows on the hotel page: when the room behind the
+     * synced min price carries an original (pre-discount) price, it renders
+     * struck through ahead of the "From" price. Skipped when there is no
+     * discount to show.
+     *
+     * @param string $card_html Theme card HTML.
+     * @param int    $hotel_id  Hotel post ID.
+     * @return string Card HTML with the original price injected.
+     */
+    public static function inject_hotel_original_price( $card_html, $hotel_id ) {
+        $rooms = Repository::get_rooms( intval( $hotel_id ), 1 );
+        if ( ! is_array( $rooms->posts ) || $rooms->posts === array() || ! $rooms->posts[0] instanceof WP_Post ) {
+            return $card_html;
+        }
+        $room_id = $rooms->posts[0]->ID;
+        $price = floatval( get_post_meta( $room_id, 'property_price', true ) );
+        $original = Repository::get_original_price( $room_id );
+        if ( $price <= 0 || $original <= $price ) {
+            return $card_html;
+        }
+        // format_price() escapes its own output (symbol via esc_html).
+        $was = '<span class="ssc-price-was">' . Repository::format_price( $original ) . '</span> '; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in the formatter, see above.
+        $with_was = preg_replace(
+            '#(<div class="price_unit">)#',
+            '$1' . $was,
+            $card_html
+        );
+        return is_string( $with_was ) ? $with_was : $card_html;
     }
 
     /**

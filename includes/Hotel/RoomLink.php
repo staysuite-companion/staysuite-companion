@@ -31,6 +31,12 @@ class RoomLink {
         add_action( 'manage_estate_property_posts_custom_column', array( $this, 'render_list_column' ), 10, 2 );
         add_action( 'quick_edit_custom_box', array( $this, 'render_quick_edit' ), 10, 2 );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin' ) );
+        // Room prices change outside the edit screen too (imports, bulk
+        // tools, REST, direct meta writes): keep the hotel's stored min
+        // in step no matter where the change comes from.
+        add_action( 'added_post_meta', array( $this, 'sync_on_price_change' ), 10, 4 );
+        add_action( 'updated_post_meta', array( $this, 'sync_on_price_change' ), 10, 4 );
+        add_action( 'deleted_post_meta', array( $this, 'sync_on_price_change' ), 10, 4 );
     }
 
     /**
@@ -140,6 +146,35 @@ class RoomLink {
             } else {
                 delete_post_meta( $post_id, Repository::ROOM_ORIGINAL_PRICE_META );
             }
+        }
+    }
+
+    /**
+     * Re-sync the linked hotel whenever a room's booking price changes.
+     *
+     * The hotel card shows a stored min price, so any property_price write
+     * — edit screen, import, bulk tool, REST — must refresh it, or the
+     * hotel keeps showing a stale "From" value. Hotel posts carry
+     * property_price too but are a different post type, so the sync's own
+     * write cannot recurse back here.
+     *
+     * @param int    $meta_id    Meta row ID.
+     * @param int    $post_id    Post the meta belongs to.
+     * @param string $meta_key   Meta key that changed.
+     * @param mixed  $meta_value New meta value.
+     * @return void
+     */
+    public function sync_on_price_change( $meta_id, $post_id, $meta_key, $meta_value ) {
+        unset( $meta_id, $meta_value );
+        if ( $meta_key !== 'property_price' ) {
+            return;
+        }
+        if ( get_post_type( $post_id ) !== 'estate_property' ) {
+            return;
+        }
+        $hotel_id = Repository::get_room_hotel_id( $post_id );
+        if ( $hotel_id > 0 ) {
+            Repository::sync_hotel_data( $hotel_id );
         }
     }
 

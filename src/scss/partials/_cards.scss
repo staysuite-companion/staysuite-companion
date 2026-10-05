@@ -16,3 +16,16 @@
     opacity: 0.7;
     margin-right: 2px;
 }
+
+/* Pre-discount "was" price on hotel cards (cheapest room's original
+   price). Red with a heavier strike so the discount reads at a glance,
+   on the image overlay and in the body alike. */
+.ssc-price-was {
+    color: #d63638;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+    margin-right: 6px;
+    white-space: nowrap;
+}

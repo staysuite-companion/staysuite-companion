@@ -317,8 +317,10 @@
 
 .ssc-room-was {
     font-size: 15px;
-    color: var(--ssc-text);
+    font-weight: 600;
+    color: #d63638;
     text-decoration: line-through;
+    text-decoration-thickness: 2px;
 }
 
 .ssc-room-per {

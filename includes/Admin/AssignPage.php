@@ -120,6 +120,8 @@ class AssignPage {
     /**
      * Persist the submitted room -> hotel assignments.
      *
+     * Affected hotels (new and previous) re-sync price, terms and coords.
+     *
      * @return void
      */
     private function process_save() {
@@ -128,6 +130,7 @@ class AssignPage {
         $assignments = isset( $_POST['ssc_hotel_for'] ) && is_array( $_POST['ssc_hotel_for'] )
             ? array_map( 'intval', wp_unslash( $_POST['ssc_hotel_for'] ) )
             : array();
+        $affected = array();
         foreach ( $assignments as $room_id => $hotel_id ) {
             $room_id = intval( $room_id );
             $hotel_id = intval( $hotel_id );
@@ -137,7 +140,8 @@ class AssignPage {
             if ( $hotel_id > 0 && ( get_post_type( $hotel_id ) !== \StaySuite\Companion\Hotel\HotelCPT::POST_TYPE || get_post_status( $hotel_id ) !== 'publish' ) ) {
                 continue;
             }
-            if ( Repository::get_room_hotel_id( $room_id ) === $hotel_id ) {
+            $previous = Repository::get_room_hotel_id( $room_id );
+            if ( $previous === $hotel_id ) {
                 continue;
             }
             if ( $hotel_id > 0 ) {
@@ -145,7 +149,16 @@ class AssignPage {
             } else {
                 delete_post_meta( $room_id, Repository::ROOM_HOTEL_META );
             }
+            if ( $previous > 0 ) {
+                $affected[] = $previous;
+            }
+            if ( $hotel_id > 0 ) {
+                $affected[] = $hotel_id;
+            }
             ++$saved;
+        }
+        foreach ( array_unique( $affected ) as $sync_id ) {
+            Repository::sync_hotel_data( intval( $sync_id ) );
         }
         print '<div class="notice notice-success is-dismissible"><p>'
             . sprintf(
@@ -158,6 +171,8 @@ class AssignPage {
 
     /**
      * Apply one hotel to all checked rooms.
+     *
+     * Affected hotels (new and previous) re-sync price, terms and coords.
      *
      * @return void
      */
@@ -176,12 +191,14 @@ class AssignPage {
             ? array_map( 'intval', wp_unslash( $_POST['ssc_bulk_rooms'] ) )
             : array();
         $saved = 0;
+        $affected = array();
         foreach ( $room_ids as $room_id ) {
             $room_id = intval( $room_id );
             if ( get_post_type( $room_id ) !== 'estate_property' || ! current_user_can( 'edit_post', $room_id ) ) {
                 continue;
             }
-            if ( Repository::get_room_hotel_id( $room_id ) === $hotel_id ) {
+            $previous = Repository::get_room_hotel_id( $room_id );
+            if ( $previous === $hotel_id ) {
                 continue;
             }
             if ( $hotel_id > 0 ) {
@@ -189,7 +206,16 @@ class AssignPage {
             } else {
                 delete_post_meta( $room_id, Repository::ROOM_HOTEL_META );
             }
+            if ( $previous > 0 ) {
+                $affected[] = $previous;
+            }
+            if ( $hotel_id > 0 ) {
+                $affected[] = $hotel_id;
+            }
             ++$saved;
+        }
+        foreach ( array_unique( $affected ) as $sync_id ) {
+            Repository::sync_hotel_data( intval( $sync_id ) );
         }
         $this->notice(
             sprintf(

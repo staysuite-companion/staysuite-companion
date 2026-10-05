@@ -337,10 +337,12 @@ body.ssc-homepage {
     fill: var(--ssc-search-icon, #137699);
 }
 
-/* Vertically centre field icons over their inputs. Mirrors the theme's
-   absolute positioning (theme CSS never loads in the editor canvas,
-   where static icons otherwise stack above the inputs). Same values,
-   so frontend rendering is unchanged. */
+/* Vertically centre field icons over their inputs. Byte-identical to the
+   theme's own geometry (top 50% plus a negative margin, no transform):
+   the theme rule out-specifies this one on the frontend, so any extra
+   offset here — e.g. a translateY — would stack on top of the theme's
+   and lift every icon. Theme CSS never loads in the editor canvas,
+   where this rule alone provides the same centring. */
 .ssc-hero .search_wr_elementor .elementor_search_builder_field_wrapper,
 .ssc-hotel-search .search_wr_elementor .elementor_search_builder_field_wrapper {
     position: relative;
@@ -355,7 +357,7 @@ body.ssc-homepage {
     position: absolute;
     left: 12px;
     top: 50%;
-    transform: translateY(-50%);
+    margin-top: -10px;
     z-index: 1;
 }
 

@@ -65,29 +65,35 @@ class Repository {
      * @return WP_Query Rooms query.
      */
     public static function get_rooms( $hotel_id, $limit = 100 ) {
-        // phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value, WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Bounded, indexed lookup of the rooms belonging to one hotel.
+        // phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Bounded, indexed lookup of the rooms belonging to one hotel.
         return new WP_Query(
             array(
 				'post_type'       => 'estate_property',
 				'post_status'     => 'publish',
 				'posts_per_page'  => intval( $limit ),
 				'ssc_room_lookup' => true,
-				'meta_key'       => self::ROOM_HOTEL_META,
-				'meta_value'     => intval( $hotel_id ),
-				'meta_compare'   => '=',
-				'meta_query'     => array(
-					array(
+				// Named clauses: a bare orderby=meta_value_num would sort by
+				// the hotel-link clause (constant per hotel), not the price.
+				'meta_query'      => array(
+					'relation'     => 'AND',
+					'hotel_clause' => array(
+						'key'     => self::ROOM_HOTEL_META,
+						'value'   => intval( $hotel_id ),
+						'compare' => '=',
+					),
+					'price_clause' => array(
 						'key'     => 'property_price',
 						'type'    => 'NUMERIC',
 						'compare' => 'EXISTS',
 					),
 				),
-				'orderby'        => 'meta_value_num',
-				'order'          => 'ASC',
-				'no_found_rows'  => true,
+				'orderby'         => array(
+					'price_clause' => 'ASC',
+				),
+				'no_found_rows'   => true,
             )
         );
-        // phpcs:enable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value, WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+        // phpcs:enable WordPress.DB.SlowDBQuery.slow_db_query_meta_query
     }
 
     /**
