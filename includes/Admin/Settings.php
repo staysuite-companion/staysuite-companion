@@ -67,6 +67,7 @@ class Settings {
             'color_hover'         => '#022947',
             'delete_on_uninstall' => 0,
             'search_result'       => 'hotels',
+            'group_selection'     => 1,
         );
     }
 
@@ -88,10 +89,28 @@ class Settings {
         $all['color_hover']  = self::hex_or_default( $all['color_hover'], '#022947' );
         $all['delete_on_uninstall'] = ! empty( $all['delete_on_uninstall'] ) ? 1 : 0;
         $all['search_result'] = ( $all['search_result'] === 'listings' ) ? 'listings' : 'hotels';
+        $all['group_selection'] = ! empty( $all['group_selection'] ) ? 1 : 0;
         if ( $key === null ) {
             return $all;
         }
         return array_key_exists( $key, $all ) ? $all[ $key ] : null;
+    }
+
+    /**
+     * Whether multi-room group quotes are enabled.
+     *
+     * The toggle lives here so owners control it from StaySuite Settings;
+     * Pro renders its Add to quote buttons only when this allows it.
+     *
+     * @return bool True unless the owner disabled group quotes.
+     */
+    public static function group_selection_enabled() {
+        /**
+         * Filter group-quote selection availability (Pro: Add to quote buttons).
+         *
+         * @param bool $enabled Enabled unless disabled in settings.
+         */
+        return (bool) apply_filters( 'ssc_group_selection_enabled', ! empty( self::get( 'group_selection' ) ) );
     }
 
     /**
@@ -115,6 +134,7 @@ class Settings {
             'color_hover'    => self::hex_or_default( $raw['color_hover'] ?? '', '#022947' ),
             'delete_on_uninstall' => ! empty( $raw['delete_on_uninstall'] ) ? 1 : 0,
             'search_result'  => ( isset( $raw['search_result'] ) && $raw['search_result'] === 'listings' ) ? 'listings' : 'hotels',
+            'group_selection' => ! empty( $raw['group_selection'] ) ? 1 : 0,
         );
     }
 

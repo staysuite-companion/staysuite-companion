@@ -362,6 +362,7 @@ class Renderer {
             ob_start();
             include $card;
             $html = (string) ob_get_clean();
+            $html = self::append_booking_context( $html, $room->ID );
         }
         // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Restores the global saved before the swap.
         $post = $previous;
@@ -488,6 +489,7 @@ class Renderer {
             $html = self::inject_hotel_search_meta( $html, $hotel->ID );
             $html = self::inject_hotel_price_prefix( $html, $hotel->ID );
             $html = self::inject_hotel_original_price( $html, $hotel->ID );
+            $html = self::append_search_context( $html, $hotel->ID );
         }
         // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Restores the global saved before the swap.
         $post = $previous;
@@ -628,6 +630,96 @@ class Renderer {
             $card_html
         );
         return is_string( $with_was ) ? $with_was : $card_html;
+    }
+
+    /**
+     * Read the visitor's current search filters from the request.
+     *
+     * Normalizes both guest spellings the plugin and theme use.
+     *
+     * @return array{check_in:string,check_out:string,guests:string} Filters, empty when absent.
+     */
+    private static function current_search_params() {
+        $raw = array();
+        foreach ( array( 'check_in', 'check_out', 'guest_no', 'guests' ) as $key ) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only carry-forward of the visitor's own search filters.
+            $raw[ $key ] = isset( $_GET[ $key ] ) ? sanitize_text_field( wp_unslash( $_GET[ $key ] ) ) : '';
+        }
+        $guests = $raw['guest_no'] !== '' ? $raw['guest_no'] : $raw['guests'];
+        return array(
+            'check_in'  => $raw['check_in'],
+            'check_out' => $raw['check_out'],
+            'guests'    => is_numeric( $guests ) ? (string) max( 1, intval( $guests ) ) : '',
+        );
+    }
+
+    /**
+     * Append args to every link pointing at a post's permalink in card HTML.
+     *
+     * @param string              $card_html Card HTML.
+     * @param int                 $post_id   Post the links point at.
+     * @param array<string,string> $args     Query args to append.
+     * @return string Card HTML with contextual links.
+     */
+    private static function append_link_args( $card_html, $post_id, $args ) {
+        $link = get_permalink( intval( $post_id ) );
+        if ( ! is_string( $link ) || $link === '' ) {
+            return $card_html;
+        }
+        return str_replace( $link, add_query_arg( $args, $link ), $card_html );
+    }
+
+    /**
+     * Carry the current search filters onto hotel card links.
+     *
+     * The hotel page applies dates/guests from these params, so cards
+     * rendered on a search surface keep the visitor's context instead of
+     * dropping it at the hotel door.
+     *
+     * @param string $card_html Theme card HTML.
+     * @param int    $hotel_id  Hotel post ID.
+     * @return string Card HTML with contextual hotel links.
+     */
+    public static function append_search_context( $card_html, $hotel_id ) {
+        $params = self::current_search_params();
+        $args = array_filter(
+            array(
+                'check_in'  => $params['check_in'],
+                'check_out' => $params['check_out'],
+                'guest_no'  => $params['guests'],
+                'guests'    => $params['guests'],
+            )
+        );
+        if ( $args === array() ) {
+            return $card_html;
+        }
+        return self::append_link_args( $card_html, $hotel_id, $args );
+    }
+
+    /**
+     * Carry the current search filters onto room card links.
+     *
+     * Room pages are theme templates whose booking form only honors the
+     * check_in_prop/check_out_prop/guest_no_prop params, in display date
+     * format — so the context is translated, not just forwarded.
+     *
+     * @param string $card_html Theme card HTML.
+     * @param int    $room_id   Room post ID.
+     * @return string Card HTML with contextual room links.
+     */
+    public static function append_booking_context( $card_html, $room_id ) {
+        $params = self::current_search_params();
+        $args = array_filter(
+            array(
+                'check_in_prop'  => Repository::to_display_date( $params['check_in'] ),
+                'check_out_prop' => Repository::to_display_date( $params['check_out'] ),
+                'guest_no_prop'  => $params['guests'],
+            )
+        );
+        if ( $args === array() ) {
+            return $card_html;
+        }
+        return self::append_link_args( $card_html, $room_id, $args );
     }
 
     /**

@@ -158,10 +158,15 @@ while ( have_posts() ) :
                     $room = Repository::get_room_data( get_the_ID() );
                     $available = $has_dates ? Repository::is_available( $room['id'], $check_in, $check_out ) : null;
                     $room_url = add_query_arg(
-                        array(
-							'check_in' => $check_in,
-							'check_out' => $check_out,
-							'guests' => $guests,
+                        array_filter(
+                            array(
+								'check_in'       => $check_in,
+								'check_out'      => $check_out,
+								'guests'         => $guests,
+								'check_in_prop'  => Repository::to_display_date( $check_in ),
+								'check_out_prop' => Repository::to_display_date( $check_out ),
+								'guest_no_prop'  => $guests,
+                            )
                         ),
                         $room['url']
                     );

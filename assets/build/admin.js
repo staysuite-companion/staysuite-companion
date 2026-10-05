@@ -371,7 +371,14 @@ function SettingsTab() {
     value: "hotels"
   }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Hotels', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
     value: "listings"
-  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Listings (rooms)', 'staysuite-companion')))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Search colors', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(Row, {
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Listings (rooms)', 'staysuite-companion')))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Group quotes', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(Row, {
+    label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Multi-room selection', 'staysuite-companion'),
+    hint: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Shows “Add to quote” on hotel room cards so visitors can request several rooms in one group request (Pro). Off leaves instant booking only.', 'staysuite-companion')
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(Check, {
+    label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Enable group quote requests', 'staysuite-companion'),
+    checked: settings.group_selection,
+    onChange: set('group_selection')
+  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Search colors', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(Row, {
     label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Color source', 'staysuite-companion')
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", {
     style: {

@@ -446,7 +446,16 @@ class QuoteAjax {
                 break;
             }
             if ( $check_dates && function_exists( 'wpestate_check_booking_valability' ) ) {
-                if ( ! wpestate_check_booking_valability( $input['check_in'], $input['check_out'], $room_id ) ) {
+                try {
+                    $available = wpestate_check_booking_valability(
+                        Repository::to_engine_date( $input['check_in'] ),
+                        Repository::to_engine_date( $input['check_out'] ),
+                        $room_id
+                    );
+                } catch ( \Throwable $e ) {
+                    $available = false;
+                }
+                if ( ! $available ) {
                     continue;
                 }
             }
@@ -507,6 +516,44 @@ class QuoteAjax {
     }
 
     /**
+     * Selection digest line for the admin email.
+     *
+     * Pro attaches selected_rooms/room_qty/total_estimate via
+     * ssc_quote_payload; plain group-form requests carry none of them and
+     * contribute an empty line, keeping the digest shape stable.
+     *
+     * @param array<string,mixed> $input Sanitized input.
+     * @return string Digest line or empty string.
+     */
+    private static function selection_digest_line( $input ) {
+        $ids = array();
+        if ( isset( $input['selected_rooms'] ) && is_array( $input['selected_rooms'] ) ) {
+            foreach ( $input['selected_rooms'] as $room_id ) {
+                $room_id = intval( $room_id );
+                if ( $room_id > 0 ) {
+                    $ids[] = $room_id;
+                }
+            }
+        }
+        if ( $ids === array() ) {
+            return '';
+        }
+        $qty = ( isset( $input['room_qty'] ) && is_array( $input['room_qty'] ) ) ? $input['room_qty'] : array();
+        $parts = array();
+        foreach ( array_unique( $ids ) as $room_id ) {
+            $count = isset( $qty[ $room_id ] ) ? max( 1, intval( $qty[ $room_id ] ) ) : 1;
+            $parts[] = $count . 'x ' . get_the_title( $room_id );
+        }
+        $line = __( 'Selected rooms: ', 'staysuite-companion' ) . implode( ', ', $parts );
+        $total = isset( $input['total_estimate'] ) ? floatval( $input['total_estimate'] ) : 0;
+        if ( $total > 0 ) {
+            $line .= ' (' . __( 'estimate: ', 'staysuite-companion' )
+                . html_entity_decode( wp_strip_all_tags( Repository::format_price( $total ) ), ENT_QUOTES, 'UTF-8' ) . ')';
+        }
+        return $line;
+    }
+
+    /**
      * Email the admin digest and the requester confirmation.
      *
      * @param int                           $request_id Request post ID.
@@ -563,6 +610,7 @@ class QuoteAjax {
             __( 'Requirements:', 'staysuite-companion' ),
             $input['requirements'],
             '',
+            self::selection_digest_line( $input ),
             sprintf(
                 /* translators: %d: number of matching properties. */
                 __( 'Suggested properties: %d', 'staysuite-companion' ),

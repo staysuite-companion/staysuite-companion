@@ -17,7 +17,7 @@
 
 A room belongs to a hotel via `_ssc_hotel_id` on the listing. Three UIs:
 
-* Room edit screen → **Hotel (StaySuite)** box (side panel, right after Publish) with an **Original price** field.
+* Room edit screen → **Property Details** → **Hotel (StaySuite)** tab, with an **Original price** field (a standalone side box only when the theme's tabbed box is unavailable).
 * Rooms list → **Quick Edit** → Hotel dropdown (preselected).
 * Hotels → **Assign Rooms** for bulk assignment, with assigned/unassigned filters.
 

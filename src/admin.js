@@ -166,6 +166,17 @@ function SettingsTab() {
                     <option value="listings">{__('Listings (rooms)', 'staysuite-companion')}</option>
                 </select>
             </Row>
+            <h2>{__('Group quotes', 'staysuite-companion')}</h2>
+            <Row
+                label={__('Multi-room selection', 'staysuite-companion')}
+                hint={__('Shows “Add to quote” on hotel room cards so visitors can request several rooms in one group request (Pro). Off leaves instant booking only.', 'staysuite-companion')}
+            >
+                <Check
+                    label={__('Enable group quote requests', 'staysuite-companion')}
+                    checked={settings.group_selection}
+                    onChange={set('group_selection')}
+                />
+            </Row>
             <h2>{__('Search colors', 'staysuite-companion')}</h2>
             <Row label={__('Color source', 'staysuite-companion')}>
                 <label style={{ display: 'block', marginBottom: '8px' }}>

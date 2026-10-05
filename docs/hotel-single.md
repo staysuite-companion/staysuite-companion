@@ -9,7 +9,14 @@ Rendered by `templates/single-ssc_hotel.php` (via `template_include`; the theme'
 3. **Description** — hotel content.
 4. **Facilities** — auto-aggregated union of all rooms' `property_features` terms, A–Z, with the theme's term icons (accent dot fallback). Zero manual entry.
 5. **Search strip** — the theme's own Check In / Check Out / Guests widget (no location field), posting back to the hotel page. Guest panel defaults to 2 adults.
-6. **Room cards** — one glass card per room: theme slider (arrows, favorite heart, lazy slides), title, Sleeps N (`guest_no`), top amenity chips, price/night, live availability badge, **View & Book** deep link carrying the chosen dates/guests.
+6. **Room cards** — one glass card per room: theme slider (arrows, favorite heart, lazy slides), title, Sleeps N (`guest_no`), top amenity chips, price/night, live availability badge, **View & Book** deep link carrying the chosen dates/guests. Pro adds an **Add to quote** button with quantity stepper feeding the group-quote tray (disable in Settings → Group quotes).
+
+## Search context carry-forward
+
+Dates/guests travel the whole funnel via URL params, so each step applies them without re-entry:
+
+* Hotel cards append the current `check_in` / `check_out` / `guest_no` / `guests` to hotel links; the hotel page filters rooms by them.
+* Room links (hotel page and room cards) additionally carry `check_in_prop` / `check_out_prop` / `guest_no_prop` — the only params the theme booking form pre-fills — with Y-m-d dates converted to the theme display format (`Repository::to_display_date()`).
 7. **Map** — first-party Leaflet map (the theme only initializes listing maps for `estate_property` singles) with a hotel pin. Coords inherit from the first room with lat/lng and are cached onto the hotel; skipped when unknown.
 
 ## Availability

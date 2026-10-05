@@ -8,6 +8,7 @@
 
 namespace StaySuite\Companion\Booking;
 
+use StaySuite\Companion\Hotel\Repository;
 use WP_Post;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -165,6 +166,7 @@ class RequestCPT {
         }
         print '<tr><th>' . esc_html__( 'Suggested properties', 'staysuite-companion' ) . '</th><td>'
             . ( ! empty( $links ) ? implode( '<br>', $links ) : esc_html__( 'None', 'staysuite-companion' ) ) . '</td></tr>';
+        print self::selection_rows( intval( $post->ID ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Rows escape every value when built.
         print '</table>';
         print '<p><label for="ssc_request_status"><strong>' . esc_html__( 'Status', 'staysuite-companion' ) . '</strong></label> ';
         print '<select id="ssc_request_status" name="ssc_request_status">';
@@ -173,6 +175,45 @@ class RequestCPT {
                 . esc_html( $label ) . '</option>';
         }
         print '</select></p>';
+    }
+
+    /**
+     * Selected-rooms rows for group-quote requests (Pro).
+     *
+     * Reads the Pro-persisted selection (_ssc_pro_room_ids,
+     * _ssc_pro_room_qty, _ssc_pro_total_estimate); renders nothing when the
+     * request came from the plain group form.
+     *
+     * @param int $request_id Request post ID.
+     * @return string Table rows, empty when no selection exists.
+     */
+    private static function selection_rows( $request_id ) {
+        $ids = array_map( 'intval', (array) get_post_meta( $request_id, '_ssc_pro_room_ids', true ) );
+        $ids = array_values( array_filter( $ids ) );
+        if ( $ids === array() ) {
+            return '';
+        }
+        $qty = (array) get_post_meta( $request_id, '_ssc_pro_room_qty', true );
+        $lines = array();
+        foreach ( $ids as $room_id ) {
+            $count = isset( $qty[ $room_id ] ) ? max( 1, intval( $qty[ $room_id ] ) ) : 1;
+            $title = get_post_status( $room_id ) ? get_the_title( $room_id ) : __( '(removed listing)', 'staysuite-companion' );
+            $lines[] = sprintf(
+                /* translators: 1: quantity, 2: room title. */
+                esc_html__( '%1$d × %2$s', 'staysuite-companion' ),
+                $count,
+                $title
+            );
+        }
+        $total = floatval( get_post_meta( $request_id, '_ssc_pro_total_estimate', true ) );
+        $html = '<tr><th>' . esc_html__( 'Selected rooms', 'staysuite-companion' ) . '</th><td>'
+            . esc_html( implode( ', ', $lines ) ) . '</td></tr>';
+        if ( $total > 0 ) {
+            // format_price() escapes its own output (symbol via esc_html).
+            $html .= '<tr><th>' . esc_html__( 'Estimated total', 'staysuite-companion' ) . '</th><td>'
+                . Repository::format_price( $total ) . '</td></tr>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in the formatter, see above.
+        }
+        return $html;
     }
 
     /**
@@ -211,6 +252,7 @@ class RequestCPT {
         $columns['ssc_city'] = esc_html__( 'City', 'staysuite-companion' );
         $columns['ssc_dates'] = esc_html__( 'Dates', 'staysuite-companion' );
         $columns['ssc_party'] = esc_html__( 'Party', 'staysuite-companion' );
+        $columns['ssc_quote'] = esc_html__( 'Quote', 'staysuite-companion' );
         $columns['ssc_status'] = esc_html__( 'Status', 'staysuite-companion' );
         return $columns;
     }
@@ -241,6 +283,39 @@ class RequestCPT {
             case 'ssc_status':
                 echo esc_html( self::STATUSES[ self::get_status( $post_id ) ] );
                 break;
+            case 'ssc_quote':
+                echo esc_html( self::quote_summary( intval( $post_id ) ) );
+                break;
         }
+    }
+
+    /**
+     * One-line quote summary for the requests list ("2 rooms · ৳24,000").
+     *
+     * Empty for plain group-form requests without a room selection.
+     *
+     * @param int $request_id Request post ID.
+     * @return string Summary or empty string.
+     */
+    private static function quote_summary( $request_id ) {
+        $ids = array_filter( array_map( 'intval', (array) get_post_meta( $request_id, '_ssc_pro_room_ids', true ) ) );
+        if ( $ids === array() ) {
+            return '';
+        }
+        $qty = (array) get_post_meta( $request_id, '_ssc_pro_room_qty', true );
+        $units = 0;
+        foreach ( $ids as $room_id ) {
+            $units += isset( $qty[ $room_id ] ) ? max( 1, intval( $qty[ $room_id ] ) ) : 1;
+        }
+        $summary = sprintf(
+            /* translators: %d: number of rooms. */
+            _n( '%d room', '%d rooms', $units, 'staysuite-companion' ),
+            $units
+        );
+        $total = floatval( get_post_meta( $request_id, '_ssc_pro_total_estimate', true ) );
+        if ( $total > 0 ) {
+            $summary .= ' · ' . html_entity_decode( wp_strip_all_tags( Repository::format_price( $total ) ), ENT_QUOTES, 'UTF-8' );
+        }
+        return $summary;
     }
 }

@@ -1,0 +1,15 @@
+@use '../breakpoints' as bp;
+
+/* ---------- Theme single-listing header (listing_type_5) ---------- */
+
+/* The theme pins the price as a full-width absolute layer at the
+   bottom-right of the title block while the location line spans the full
+   width beneath it — long location lists run under the price. Reserve the
+   price zone on desktop; the theme already narrows the line itself at
+   <=1024px, so this stays out of its way. */
+@media (min-width: bp.$bp-desktop + 1) {
+    .content-fixed-listing.listing_type_5 .listing_main_image_location {
+        box-sizing: border-box;
+        padding-right: 260px;
+    }
+}

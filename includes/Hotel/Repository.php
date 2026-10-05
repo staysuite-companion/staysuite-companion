@@ -459,15 +459,77 @@ class Repository {
         if ( ! function_exists( 'wpestate_check_booking_valability' ) ) {
             return null;
         }
-        if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $from ) && function_exists( 'wpestate_convert_dateformat_reverse' ) ) {
-            $from = wpestate_convert_dateformat_reverse( $from );
-            $to = wpestate_convert_dateformat_reverse( $to );
-        }
+        $from = self::to_engine_date( $from );
+        $to = self::to_engine_date( $to );
         try {
             return (bool) wpestate_check_booking_valability( $from, $to, intval( $room_id ) );
         } catch ( \Throwable $e ) {
             return null;
         }
+    }
+
+    /**
+     * Normalize a date to the theme's display format for pre-filling forms.
+     *
+     * Theme date inputs (search, booking) show the customizer date format,
+     * while native inputs and some flows produce Y-m-d. Pass Y-m-d through
+     * the theme's reverse converter; anything else travels untouched.
+     *
+     * @param string $date Date string, possibly empty.
+     * @return string Display-format date, empty when no date given.
+     */
+    public static function to_display_date( $date ) {
+        $date = sanitize_text_field( (string) $date );
+        if ( $date === '' ) {
+            return '';
+        }
+        if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) && function_exists( 'wpestate_convert_dateformat_reverse' ) ) {
+            return wpestate_convert_dateformat_reverse( $date );
+        }
+        return $date;
+    }
+
+    /**
+     * Normalize a date to the engine's expected display format.
+     *
+     * The booking engine (wpestate_check_booking_valability) parses with
+     * the customizer format at 4-digit years and fatals on anything else,
+     * so Y-m-d input is reordered per the site's format index with dashes.
+     * Anything already in display form travels untouched.
+     *
+     * @param string $date Date string, possibly empty.
+     * @return string Engine-ready date.
+     */
+    public static function to_engine_date( $date ) {
+        $date = sanitize_text_field( (string) $date );
+        if ( ! preg_match( '/^(\d{4})-(\d{2})-(\d{2})$/', $date, $m ) ) {
+            return $date;
+        }
+        $orders = array(
+            0 => array( 'Y', 'm', 'd' ),
+            1 => array( 'Y', 'd', 'm' ),
+            2 => array( 'd', 'm', 'Y' ),
+            3 => array( 'm', 'd', 'Y' ),
+            4 => array( 'd', 'Y', 'm' ),
+            5 => array( 'm', 'Y', 'd' ),
+        );
+        $format = 0;
+        if ( function_exists( 'wprentals_get_option' ) ) {
+            $format = intval( wprentals_get_option( 'wp_estate_date_format', 0 ) );
+        }
+        if ( ! isset( $orders[ $format ] ) ) {
+            return $date;
+        }
+        $parts = array(
+            'Y' => sprintf( '%04d', intval( $m[1] ) ),
+            'm' => sprintf( '%02d', intval( $m[2] ) ),
+            'd' => sprintf( '%02d', intval( $m[3] ) ),
+        );
+        $out = array();
+        foreach ( $orders[ $format ] as $key ) {
+            $out[] = $parts[ $key ];
+        }
+        return implode( '-', $out );
     }
 
     /**

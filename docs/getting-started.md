@@ -32,7 +32,7 @@ that instead of hunting for Page Attributes.
 ## Set up hotels
 
 1. Hotels → Add New: title, featured image, city/address/phone, content.
-2. Assign rooms three ways: room edit screen → **Hotel (StaySuite)** box (right after Publish), rooms list → Quick Edit → Hotel, or Hotels → Assign Rooms for bulk.
+2. Assign rooms three ways: room edit screen → Property Details → **Hotel (StaySuite)** tab, rooms list → Quick Edit → Hotel, or Hotels → Assign Rooms for bulk.
 3. Open the hotel page: gallery cover, facilities, date strip, room cards and map render from the rooms' own data.
 
 No theme file is ever modified — everything ships as plugin templates, styles and scripts.

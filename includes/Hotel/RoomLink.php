@@ -31,6 +31,7 @@ class RoomLink {
         add_action( 'manage_estate_property_posts_custom_column', array( $this, 'render_list_column' ), 10, 2 );
         add_action( 'quick_edit_custom_box', array( $this, 'render_quick_edit' ), 10, 2 );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin' ) );
+        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_tab' ) );
         // Room prices change outside the edit screen too (imports, bulk
         // tools, REST, direct meta writes): keep the hotel's stored min
         // in step no matter where the change comes from.
@@ -42,12 +43,17 @@ class RoomLink {
     /**
      * Register the hotel selector meta box on rooms.
      *
-     * Side/high lands it right after Publish.
+     * Side/high lands it right after Publish. Skipped when the theme's
+     * tabbed Property Details box is present — the fields live in a
+     * StaySuite tab there instead (see enqueue_tab()).
      *
      * @return void
      */
     public function add_meta_box() {
         if ( ! post_type_exists( 'estate_property' ) ) {
+            return;
+        }
+        if ( self::theme_tabbed_box_present() ) {
             return;
         }
         add_meta_box(
@@ -57,6 +63,80 @@ class RoomLink {
             'estate_property',
             'side',
             'high'
+        );
+    }
+
+    /**
+     * Whether the theme's tabbed Property Details box is on the screen.
+     *
+     * WpRentals renders its room fields as tabs with hardcoded markup and
+     * no registration seam, so presence is detected through its render
+     * callback rather than a filter.
+     *
+     * @return bool True when the StaySuite fields belong in a tab.
+     */
+    private static function theme_tabbed_box_present() {
+        return function_exists( 'estate_tabbed_interface' );
+    }
+
+    /**
+     * Enqueue the script that adds the StaySuite tab to Property Details.
+     *
+     * The tab markup and values ship as localized data; the script appends
+     * a nav item plus panel to the theme's hardcoded tab skeleton and binds
+     * the same active_tab switching the theme uses.
+     *
+     * @param string $hook Current admin page hook.
+     * @return void
+     */
+    public function enqueue_tab( $hook ) {
+        if ( $hook !== 'post.php' && $hook !== 'post-new.php' ) {
+            return;
+        }
+        $screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+        if ( ! $screen || $screen->post_type !== 'estate_property' ) {
+            return;
+        }
+        if ( ! self::theme_tabbed_box_present() ) {
+            return;
+        }
+        // Display context only; the save handler re-checks capabilities.
+        global $post;
+        $post_id = ( $post instanceof WP_Post ) ? intval( $post->ID ) : 0;
+        $hotels = array();
+        foreach ( Repository::get_all_hotels() as $hotel_id => $hotel_title ) {
+            $hotels[] = array(
+                'id'    => intval( $hotel_id ),
+                'title' => $hotel_title,
+            );
+        }
+        $original = Repository::get_original_price( $post_id );
+        $handle = 'ssc-hotel-tab';
+        $path = SSC_PATH . 'assets/js/ssc-hotel-tab.js';
+        $version = SSC_VERSION;
+        if ( file_exists( $path ) ) {
+            $hash = md5_file( $path );
+            if ( is_string( $hash ) ) {
+                $version = substr( $hash, 0, 12 );
+            }
+        }
+        wp_enqueue_script( $handle, SSC_URL . 'assets/js/ssc-hotel-tab.js', array(), $version, true );
+        wp_localize_script(
+            $handle,
+            'sscHotelTab',
+            array(
+                'hotels'   => $hotels,
+                'current'  => Repository::get_room_hotel_id( $post_id ),
+                'original' => $original > 0 ? $original : '',
+                'nonce'    => wp_create_nonce( 'ssc_room_hotel' ),
+                'i18n'     => array(
+                    'tab'         => esc_html__( 'Hotel (StaySuite)', 'staysuite-companion' ),
+                    'belongs'     => esc_html__( 'Belongs to hotel', 'staysuite-companion' ),
+                    'standalone'  => esc_html__( '— Standalone listing —', 'staysuite-companion' ),
+                    'original'    => esc_html__( 'Original price (before discount)', 'staysuite-companion' ),
+                    'description' => esc_html__( 'Rooms with a hotel show a "View hotel" link and appear on the hotel page. When the original price is higher, it shows struck through next to the booking price.', 'staysuite-companion' ),
+                ),
+            )
         );
     }
 

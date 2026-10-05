@@ -80,6 +80,7 @@ class Scripts {
 				'ajaxurl'     => admin_url( 'admin-ajax.php' ),
 				'quote_nonce' => wp_create_nonce( QuoteAjax::NONCE_ACTION ),
 				'cities'      => $this->get_cities(),
+				'date_format' => function_exists( 'wprentals_get_option' ) ? intval( wprentals_get_option( 'wp_estate_date_format', 0 ) ) : 0,
             )
         );
         wp_localize_script(

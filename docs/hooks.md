@@ -8,6 +8,7 @@
 | `ssc_group_request_saved` (`$request_id`, `$input`, `$matches`) | action | After a group request is stored + mailed |
 | `ssc_quote_payload` (`$input`, `$raw`) | filter | Extend sanitized quote fields |
 | `ssc_quote_rate_limit` (`array('max'=>5,'window'=>600)`) | filter | Quote throttling per hashed IP |
+| `ssc_group_selection_enabled` (`$enabled`) | filter | Group-quote room selection availability (Pro Add to quote buttons); setting default |
 | `ssc_hotel_search_settings` / `ssc_hero_search_settings` (`$settings`) | filter | Widget field composition |
 | `ssc_search_vars` (`$css`, `$submit`) | filter | Override search-bar color mapping |
 | `ssc_single_hotel_template` (`$path`) | filter | Override the hotel template file |
@@ -19,7 +20,7 @@
 | `ssc.admin.tabs` | JS filter | Admin tab registry (Pro injects License/AI tabs) |
 | `ssc-pro/v1/license`, `/ai-settings`, `/ai-test` | REST (Pro, `manage_options`) | License + AI settings backend |
 
-AJAX: `ssc_group_quote` (quote flow), `ssc_quote_nonce` (fresh nonce for cached pages), `ssc_resolve_hotels` (card badges), `ssc_dismiss_notice` (per-user notice dismissal). JS globals: `sscBooking` (`ajaxurl`, `quote_nonce`, `cities`), `sscCards` (`ajaxurl`, `nonce`), `sscLinks` (canonical outbound URLs), `sscTermImage` (media-picker title), `sscNotice` (`ajaxurl`, `nonce`).
+AJAX: `ssc_group_quote` (quote flow), `ssc_quote_nonce` (fresh nonce for cached pages), `ssc_resolve_hotels` (card badges), `ssc_dismiss_notice` (per-user notice dismissal). JS globals: `sscBooking` (`ajaxurl`, `quote_nonce`, `cities`, `date_format`), `sscCards` (`ajaxurl`, `nonce`), `sscLinks` (canonical outbound URLs), `sscTermImage` (media-picker title), `sscNotice` (`ajaxurl`, `nonce`).
 
 ## Stored data
 
