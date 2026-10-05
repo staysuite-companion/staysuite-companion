@@ -19,7 +19,7 @@ Which contact field is mandatory follows Settings → Group quotes → Required 
 
 Stale nonces (cached pages) return an `ssc_nonce_expired` code; the form fetches a fresh nonce from `ssc_quote_nonce` and retries once.
 
-Manage requests under Group Requests in wp-admin (status meta box included). The post type is gated by `edit_posts` (same bar as the rest of the StaySuite admin).
+Manage requests under Group Requests in wp-admin (status meta box included). The post type is administrator-only via `manage_options`, like the rest of the StaySuite menu — with `map_meta_cap` left off because mapping it true here corrupts the global meta-cap registry.
 
 ## Multi-room selection (Pro group quotes)
 

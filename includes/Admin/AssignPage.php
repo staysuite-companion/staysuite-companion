@@ -64,7 +64,7 @@ class AssignPage {
             'edit.php?post_type=ssc_hotel',
             esc_html__( 'Assign Hotels', 'staysuite-companion' ),
             esc_html__( 'Assign Hotels', 'staysuite-companion' ),
-            'edit_posts',
+            'manage_options',
             self::PAGE_SLUG,
             array( $this, 'render' )
         );
@@ -98,7 +98,7 @@ class AssignPage {
      * @return void
      */
     public function render() {
-        if ( ! current_user_can( 'edit_posts' ) ) {
+        if ( ! current_user_can( 'manage_options' ) ) {
             wp_die( esc_html__( 'You do not have permission to do this.', 'staysuite-companion' ) );
         }
 

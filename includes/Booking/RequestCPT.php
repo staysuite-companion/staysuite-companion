@@ -55,10 +55,11 @@ class RequestCPT {
     /**
      * Register the request post type (admin UI only).
      *
-     * Every primitive capability maps to edit_posts, the same bar as
-     * the rest of the StaySuite admin. manage_options would lock it to
-     * administrators only, but several sites also run broken
-     * manage_options mappings mid-debug and lose the screen entirely.
+     * Every primitive capability maps to manage_options: administrators
+     * only, with no per-post meta mapping (map_meta_cap stays false —
+     * setting it true while collapsing every cap onto one primitive
+     * corrupts $post_type_meta_caps and breaks unrelated capability
+     * checks site-wide).
      *
      * @return void
      */
@@ -81,20 +82,20 @@ class RequestCPT {
 				'supports'     => array( 'title' ),
 				'show_in_rest' => false,
 				'capabilities' => array(
-					'edit_post'              => 'edit_posts',
-					'read_post'              => 'edit_posts',
-					'delete_post'            => 'edit_posts',
-					'edit_posts'             => 'edit_posts',
-					'edit_others_posts'      => 'edit_posts',
-					'delete_posts'           => 'edit_posts',
-					'publish_posts'          => 'edit_posts',
-					'read_private_posts'     => 'edit_posts',
-					'delete_private_posts'   => 'edit_posts',
-					'delete_published_posts' => 'edit_posts',
-					'delete_others_posts'    => 'edit_posts',
-					'edit_private_posts'     => 'edit_posts',
-					'edit_published_posts'   => 'edit_posts',
-					'create_posts'           => 'edit_posts',
+					'edit_post'              => 'manage_options',
+					'read_post'              => 'manage_options',
+					'delete_post'            => 'manage_options',
+					'edit_posts'             => 'manage_options',
+					'edit_others_posts'      => 'manage_options',
+					'delete_posts'           => 'manage_options',
+					'publish_posts'          => 'manage_options',
+					'read_private_posts'     => 'manage_options',
+					'delete_private_posts'   => 'manage_options',
+					'delete_published_posts' => 'manage_options',
+					'delete_others_posts'    => 'manage_options',
+					'edit_private_posts'     => 'manage_options',
+					'edit_published_posts'   => 'manage_options',
+					'create_posts'           => 'manage_options',
 				),
 				'map_meta_cap' => false,
             )

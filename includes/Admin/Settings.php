@@ -164,7 +164,7 @@ class Settings {
         add_menu_page(
             esc_html__( 'StaySuite', 'staysuite-companion' ),
             esc_html__( 'StaySuite', 'staysuite-companion' ),
-            'edit_posts',
+            'manage_options',
             self::MENU_SLUG,
             array( $this, 'render_page' ),
             self::logo_icon(),
@@ -174,7 +174,7 @@ class Settings {
             self::MENU_SLUG,
             esc_html__( 'Settings', 'staysuite-companion' ),
             esc_html__( 'Settings', 'staysuite-companion' ),
-            'edit_posts',
+            'manage_options',
             self::MENU_SLUG . '&tab=settings',
             array( $this, 'render_page' )
         );
@@ -190,7 +190,7 @@ class Settings {
                 self::MENU_SLUG,
                 esc_html__( 'Go Pro', 'staysuite-companion' ),
                 esc_html__( 'Go Pro', 'staysuite-companion' ),
-                'edit_posts',
+                'manage_options',
                 self::MENU_SLUG . '&tab=go-pro',
                 array( $this, 'render_page' )
             );
@@ -364,7 +364,7 @@ class Settings {
      * @return bool True for admins.
      */
     public function rest_auth() {
-        return current_user_can( 'edit_posts' );
+        return current_user_can( 'manage_options' );
     }
 
     /**
