@@ -12,6 +12,7 @@
 
 namespace StaySuite\Companion\Blocks;
 
+use StaySuite\Companion\Hotel\HotelCPT;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
@@ -41,6 +42,13 @@ class PreviewEndpoint {
     const ROUTE = '/preview';
 
     /**
+     * Carousel options route.
+     *
+     * @var string
+     */
+    const OPTIONS_ROUTE = '/carousel-options';
+
+    /**
      * Wire up WordPress hooks.
      *
      * @return void
@@ -59,6 +67,13 @@ class PreviewEndpoint {
             self::NAMESPACE, self::ROUTE, array(
 				'methods'             => 'POST',
 				'callback'            => array( $this, 'render_preview' ),
+				'permission_callback' => array( $this, 'can_preview' ),
+            )
+        );
+        register_rest_route(
+            self::NAMESPACE, self::OPTIONS_ROUTE, array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'get_carousel_options' ),
 				'permission_callback' => array( $this, 'can_preview' ),
             )
         );
@@ -118,6 +133,113 @@ class PreviewEndpoint {
         // Marker class lets preview-only CSS (e.g. hiding the JS-driven
         // guest dropdown) apply without touching the frontend.
         return new WP_REST_Response( array( 'html' => '<div class="ssc-preview">' . $html . '</div>' ), 200 );
+    }
+
+    /**
+     * Carousel editor options: taxonomy terms and source posts.
+     *
+     * The theme's post type and taxonomies are not REST-exposed, so the
+     * editor cannot use /wp/v2 for these dropdowns. This route serves the
+     * same data through the plugin's own namespace.
+     *
+     * @param WP_REST_Request $request REST request.
+     * @return WP_REST_Response Response with terms and posts.
+     */
+    public function get_carousel_options( $request ) {
+        $taxonomy = sanitize_key( (string) $request->get_param( 'taxonomy' ) );
+        if ( ! in_array( $taxonomy, Renderer::ALLOWED_TAXONOMIES, true ) ) {
+            $taxonomy = '';
+        }
+        $source = sanitize_key( (string) $request->get_param( 'source' ) );
+        if ( 'hotels' !== $source ) {
+            $source = 'rooms';
+        }
+        return new WP_REST_Response(
+            array(
+				'terms' => self::carousel_terms( $taxonomy ),
+				'posts' => self::carousel_posts( $source ),
+            ), 200
+        );
+    }
+
+    /**
+     * Terms for a carousel filter taxonomy.
+     *
+     * @param string $taxonomy Taxonomy slug, empty for none.
+     * @return array<int,array{slug:string,name:string,count:int}> Term options.
+     */
+    private static function carousel_terms( $taxonomy ) {
+        if ( '' === $taxonomy || ! taxonomy_exists( $taxonomy ) ) {
+            return array();
+        }
+        $terms = get_terms(
+            array(
+				'taxonomy'   => $taxonomy,
+				'hide_empty' => false,
+				'number'     => 200,
+				'orderby'    => 'count',
+				'order'      => 'DESC',
+            )
+        );
+        if ( is_wp_error( $terms ) || ! is_array( $terms ) ) {
+            return array();
+        }
+        $options = array();
+        foreach ( $terms as $term ) {
+            if ( ! $term instanceof \WP_Term ) {
+                continue;
+            }
+            $options[] = array(
+				'slug'  => $term->slug,
+				'name'  => $term->name,
+				'count' => intval( $term->count ),
+            );
+        }
+        return $options;
+    }
+
+    /**
+     * Posts for the carousel hand-picked dropdown.
+     *
+     * @param string $source Carousel source (rooms|hotels).
+     * @return array<int,array{id:int,title:string}> Post options.
+     */
+    private static function carousel_posts( $source ) {
+        $post_type = 'hotels' === $source ? HotelCPT::POST_TYPE : 'estate_property';
+        if ( ! post_type_exists( $post_type ) ) {
+            return array();
+        }
+        $ids = get_posts(
+            array(
+				'post_type'        => $post_type,
+				'post_status'      => 'publish',
+				'posts_per_page'   => 100,
+				'orderby'          => 'title',
+				'order'            => 'ASC',
+				'fields'           => 'ids',
+				'suppress_filters' => true,
+            )
+        );
+        if ( ! is_array( $ids ) ) {
+            return array();
+        }
+        $options = array();
+        foreach ( $ids as $id ) {
+            $id = intval( $id );
+            if ( $id <= 0 ) {
+                continue;
+            }
+            $title = get_the_title( $id );
+            if ( ! is_string( $title ) || '' === trim( $title ) ) {
+                // translators: %d: post ID.
+                $title = sprintf( esc_html__( 'Untitled #%d', 'staysuite-companion' ), $id );
+            }
+            $options[] = array(
+				'id'    => $id,
+				'title' => $title,
+            );
+        }
+        return $options;
     }
 
     /**

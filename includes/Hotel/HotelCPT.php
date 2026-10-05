@@ -176,5 +176,6 @@ class HotelCPT {
         } else {
             delete_post_meta( $post_id, '_ssc_featured' );
         }
+        Repository::sync_hotel_data( $post_id );
     }
 }

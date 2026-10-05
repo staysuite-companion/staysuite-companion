@@ -30,6 +30,8 @@ Horizontal snap carousel of theme listing cards with gallery-style flanking arro
 
 Attributes: `title`, `source` (`rooms`|`hotels`), `taxonomy`, `term`, `city`, `count` (default 8), `featured_only` (`1`|`0`), `include_ids`, `order` (`featured`|…).
 
+The `taxonomy` + `term` filter works for both rooms and hotels (hotels inherit city/area/category terms from their linked rooms), so area-wise or city-wise hotel rows work. The editor offers term and hand-picked post dropdowns via `ssc/v1/carousel-options`; the `city` attribute remains for shortcodes filtering hotels by city meta. A hand-picked `include_ids` post overrides every other filter and ordering.
+
 ```
 [ssc_listing_carousel title="Popular stays" source="rooms" count="8"]
 ```

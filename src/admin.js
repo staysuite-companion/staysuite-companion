@@ -21,22 +21,64 @@ function sscLinks() {
     return (typeof window !== 'undefined' && window.sscLinks) || {};
 }
 
+function tabSlugFromSubmenuLink(anchor) {
+    try {
+        const url = new URL(anchor.href, window.location.href);
+        return url.searchParams.get('tab') || 'settings';
+    } catch (e) {
+        return 'settings';
+    }
+}
+
+function syncSidebarSubmenu(slug) {
+    document.querySelectorAll('#adminmenu .wp-submenu a[href*="page=ssc-staysuite"]').forEach((anchor) => {
+        const active = tabSlugFromSubmenuLink(anchor) === slug;
+        anchor.classList.toggle('current', active);
+        const li = anchor.closest('li');
+        if (li) {
+            li.classList.toggle('current', active);
+        }
+    });
+}
+
+function useFeedback() {
+    const [feedback, setFeedback] = useState(null);
+    useEffect(() => {
+        if (!feedback) {
+            return undefined;
+        }
+        const timer = window.setTimeout(() => setFeedback(null), 4500);
+        return () => window.clearTimeout(timer);
+    }, [feedback]);
+    return { feedback, setFeedback };
+}
+
+function FeedbackToast({ feedback }) {
+    if (!feedback) {
+        return null;
+    }
+    return <div className={`ssc-feedback ssc-feedback-${feedback.kind || 'success'}`}>{feedback.text}</div>;
+}
+
 function useSettings() {
     const [settings, setSettings] = useState(null);
-    const [message, setMessage] = useState('');
+    const { feedback, setFeedback } = useFeedback();
     useEffect(() => {
         apiFetch({ path: '/ssc/v1/settings' }).then((res) => {
             setSettings(res && res.settings ? res.settings : {});
+        }).catch((err) => {
+            setFeedback({ kind: 'error', text: err && err.message ? err.message : __('Could not load settings.', 'staysuite-companion') });
         });
     }, []);
     const save = () => {
-        setMessage('');
         apiFetch({ path: '/ssc/v1/settings', method: 'POST', data: { settings } }).then((res) => {
             setSettings(res && res.settings ? res.settings : settings);
-            setMessage(__('Settings saved.', 'staysuite-companion'));
+            setFeedback({ kind: 'success', text: __('Settings saved.', 'staysuite-companion') });
+        }).catch((err) => {
+            setFeedback({ kind: 'error', text: err && err.message ? err.message : __('Could not save settings.', 'staysuite-companion') });
         });
     };
-    return { settings, setSettings, save, message };
+    return { settings, setSettings, save, feedback };
 }
 
 function Check({ label, checked, onChange }) {
@@ -60,7 +102,7 @@ function Row({ label, hint, children }) {
 }
 
 function SettingsTab() {
-    const { settings, setSettings, save, message } = useSettings();
+    const { settings, setSettings, save, feedback } = useSettings();
     if (!settings) {
         return <p>{__('Loading…', 'staysuite-companion')}</p>;
     }
@@ -111,6 +153,19 @@ function SettingsTab() {
                 />{' '}
                 <span>vh</span>
             </Row>
+            <h2>{__('Search', 'staysuite-companion')}</h2>
+            <Row
+                label={__('Search results return', 'staysuite-companion')}
+                hint={__('Applies to the homepage search and the advanced search. Hotels is the default.', 'staysuite-companion')}
+            >
+                <select
+                    value={settings.search_result === 'listings' ? 'listings' : 'hotels'}
+                    onChange={(e) => set('search_result')(e.target.value)}
+                >
+                    <option value="hotels">{__('Hotels', 'staysuite-companion')}</option>
+                    <option value="listings">{__('Listings (rooms)', 'staysuite-companion')}</option>
+                </select>
+            </Row>
             <h2>{__('Search colors', 'staysuite-companion')}</h2>
             <Row label={__('Color source', 'staysuite-companion')}>
                 <label style={{ display: 'block', marginBottom: '8px' }}>
@@ -159,9 +214,9 @@ function SettingsTab() {
             <div className="ssc-form-actions">
                 <button type="button" className="button button-primary" onClick={save}>
                     {__('Save settings', 'staysuite-companion')}
-                </button>{' '}
-                {message && <span className="ssc-form-message">{message}</span>}
+                </button>
             </div>
+            <FeedbackToast feedback={feedback} />
         </div>
     );
 }
@@ -201,6 +256,24 @@ function AdminApp({ logo, tabs, initial }) {
     const links = sscLinks();
     const select = (slug) => {
         setActive(slug);
+        updateTabUrl(slug);
+    };
+
+    useEffect(() => syncSidebarSubmenu(active), [active]);
+
+    useEffect(() => {
+        const onNavigate = (event) => {
+            if (!event.detail || typeof event.detail.slug !== 'string') {
+                return;
+            }
+            setActive(event.detail.slug);
+            updateTabUrl(event.detail.slug);
+        };
+        window.addEventListener('ssc-tab-navigate', onNavigate);
+        return () => window.removeEventListener('ssc-tab-navigate', onNavigate);
+    }, []);
+
+    function updateTabUrl(slug) {
         try {
             const url = new URL(location.href);
             url.searchParams.set('tab', slug);
@@ -208,7 +281,7 @@ function AdminApp({ logo, tabs, initial }) {
         } catch (e) {
             /* non-fatal */
         }
-    };
+    }
     return (
         <div className="ssc-admin">
             <div className="ssc-admin-head">
@@ -255,6 +328,15 @@ document.addEventListener('DOMContentLoaded', () => {
         base.push({ slug: 'go-pro', title: __('Go Pro', 'staysuite-companion'), render: GoProTab });
     }
     const tabs = applyFilters('ssc.admin.tabs', base);
+    document
+        .querySelectorAll('#adminmenu .wp-submenu a[href*="page=ssc-staysuite"]')
+        .forEach((anchor) => {
+            anchor.addEventListener('click', (event) => {
+                event.preventDefault();
+                const slug = tabSlugFromSubmenuLink(anchor);
+                window.dispatchEvent(new CustomEvent('ssc-tab-navigate', { detail: { slug } }));
+            });
+        });
     const slugs = tabs.map((t) => t.slug);
     let initial = '';
     try {

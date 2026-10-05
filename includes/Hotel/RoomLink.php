@@ -121,10 +121,17 @@ class RoomLink {
         if ( $hotel_id > 0 && ( get_post_type( $hotel_id ) !== HotelCPT::POST_TYPE || get_post_status( $hotel_id ) !== 'publish' ) ) {
             $hotel_id = 0;
         }
+        $previous_hotel_id = Repository::get_room_hotel_id( $post_id );
         if ( $hotel_id > 0 ) {
             update_post_meta( $post_id, Repository::ROOM_HOTEL_META, $hotel_id );
         } else {
             delete_post_meta( $post_id, Repository::ROOM_HOTEL_META );
+        }
+        if ( $previous_hotel_id > 0 && $previous_hotel_id !== $hotel_id ) {
+            Repository::sync_hotel_data( $previous_hotel_id );
+        }
+        if ( $hotel_id > 0 ) {
+            Repository::sync_hotel_data( $hotel_id );
         }
         if ( $full_edit && isset( $_POST['ssc_room_original_price'] ) ) {
             $original = floatval( $_POST['ssc_room_original_price'] );

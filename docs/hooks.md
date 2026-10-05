@@ -11,8 +11,10 @@
 | `ssc_hotel_search_settings` / `ssc_hero_search_settings` (`$settings`) | filter | Widget field composition |
 | `ssc_search_vars` (`$css`, `$submit`) | filter | Override search-bar color mapping |
 | `ssc_single_hotel_template` (`$path`) | filter | Override the hotel template file |
+| `ssc_search_template` (`$path`) | filter | Override the hotel search template file |
 | `ssc_room_card_actions` (`$room_id`) | action | Extra buttons per room card |
 | `ssc/v1/preview` | REST (POST, `edit_posts`) | `{block, attributes}` → `{html}` editor previews |
+| `ssc/v1/carousel-options` | REST (GET, `edit_posts`) | `?taxonomy=&source=` → `{terms, posts}` carousel editor dropdowns |
 | `ssc/v1/settings` | REST (GET/POST, `manage_options`) | Settings read/save |
 | `ssc.admin.tabs` | JS filter | Admin tab registry (Pro injects License/AI tabs) |
 | `ssc-pro/v1/license`, `/ai-settings`, `/ai-test` | REST (Pro, `manage_options`) | License + AI settings backend |

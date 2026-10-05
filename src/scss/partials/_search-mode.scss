@@ -66,18 +66,11 @@
     }
 }
 
-/* Animated collapse of the theme search bar in group mode. */
+/* Animated collapse of the theme search bar in group mode.
+   Only the active group-mode wrapper may collapse; leaving an unscoped
+   max-height on every theme form clips the advanced search fields. */
 
-.advanced_search_form_wrapper {
-    transition: opacity 0.35s ease, max-height 0.35s ease, margin 0.35s ease;
-    max-height: 500px;
-    overflow: hidden;
-
-    &.ssc-search-hidden {
-        opacity: 0;
-        max-height: 0;
-        margin-top: 0;
-        margin-bottom: 0;
-        pointer-events: none;
-    }
+.advanced_search_form_wrapper.ssc-group-active,
+.search_wr_elementor.ssc-group-active {
+    display: none;
 }

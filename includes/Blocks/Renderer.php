@@ -225,14 +225,17 @@ class Renderer {
     // phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value, WordPress.DB.SlowDBQuery.slow_db_query_meta_query, WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- The theme stores prices and the featured flag in post meta, so the block can only order and filter on them.
     private static function query_rooms( $atts ) {
         $args = array(
-            'post_type'      => 'estate_property',
-            'post_status'    => 'publish',
-            'posts_per_page' => $atts['count'],
-            'no_found_rows'  => true,
+            'post_type'       => 'estate_property',
+            'post_status'     => 'publish',
+            'posts_per_page'  => $atts['count'],
+            'no_found_rows'   => true,
+            'ssc_room_lookup' => true,
         );
         if ( ! empty( $atts['include_ids'] ) ) {
+            // Hand-picked posts override every filter and ordering.
             $args['post__in'] = $atts['include_ids'];
             $args['orderby'] = 'post__in';
+            return new WP_Query( $args );
         }
         $tax_query = array();
         if ( $atts['taxonomy'] !== '' && $atts['term'] !== '' && taxonomy_exists( $atts['taxonomy'] ) ) {
@@ -381,14 +384,30 @@ class Renderer {
             'no_found_rows'  => true,
         );
         if ( ! empty( $atts['include_ids'] ) ) {
+            // Hand-picked posts override every filter and ordering.
             $args['post__in'] = $atts['include_ids'];
             $args['orderby'] = 'post__in';
-        } elseif ( $atts['order'] === 'rand' ) {
+            return new WP_Query( $args );
+        }
+        if ( $atts['order'] === 'rand' ) {
             $args['orderby'] = 'rand';
         } else {
             $args['orderby'] = 'date';
             $args['order'] = 'DESC';
         }
+        // phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Hotel taxonomy filter on a bounded carousel query.
+        $tax_query = array();
+        if ( $atts['taxonomy'] !== '' && $atts['term'] !== '' && taxonomy_exists( $atts['taxonomy'] ) ) {
+            $tax_query[] = array(
+                'taxonomy' => $atts['taxonomy'],
+                'field'    => 'slug',
+                'terms'    => array( $atts['term'] ),
+            );
+        }
+        if ( ! empty( $tax_query ) ) {
+            $args['tax_query'] = $tax_query;
+        }
+        // phpcs:enable WordPress.DB.SlowDBQuery.slow_db_query_tax_query
         $meta_query = array();
         if ( $atts['featured_only'] ) {
             $meta_query[] = array(
@@ -423,6 +442,7 @@ class Renderer {
         if ( ! $query->have_posts() ) {
             return '';
         }
+        self::setup_card_context();
         $html = '';
         while ( $query->have_posts() ) {
             $query->the_post();
@@ -433,51 +453,118 @@ class Renderer {
     }
 
     /**
-     * Render one hotel card (plugin-owned markup).
+     * Render one hotel card through the theme template.
      *
-     * @param int $hotel_id Hotel post ID.
+     * Same property-unit markup the advanced search page uses, so hotel
+     * cards match listing cards everywhere (homepage rows, search pages).
+     * Injects the rooms + area meta line the theme leaves empty for hotels.
+     *
+     * Callers outside the theme loop must run setup_card_context() first;
+     * render_hotel_items() already does, search-ssc-hotels.php does too.
+     *
+     * @param int  $hotel_id Hotel post ID.
+     * @param bool $wide     Use the wide unit variant (half-map style).
      * @return string Card HTML.
      */
-    public static function render_hotel_card( $hotel_id ) {
-        $hotel_id = intval( $hotel_id );
-        if ( get_post_type( $hotel_id ) !== HotelCPT::POST_TYPE ) {
+    public static function render_hotel_card( $hotel_id, $wide = false ) {
+        // The theme unit template reads these globals directly; importing
+        // them keeps the include working outside the theme loop, where the
+        // include would otherwise see an empty scope.
+        global $post, $prop_selection, $schema_flag;
+        $hotel = get_post( intval( $hotel_id ) );
+        if ( ! $hotel instanceof WP_Post || $hotel->post_type !== HotelCPT::POST_TYPE ) {
             return '';
         }
-        $url = get_permalink( $hotel_id );
-        $city_term = Repository::get_city_term( $hotel_id );
-        $room_count = Repository::get_room_count( $hotel_id );
-        $min_price = Repository::get_min_price( $hotel_id );
-        $thumb = get_the_post_thumbnail( $hotel_id, 'medium' );
-
-        $html = '<article class="ssc-hotel-card">';
-        $html .= '<a class="ssc-hotel-card-media" href="' . esc_url( $url ) . '">';
-        $html .= $thumb !== '' ? $thumb : '<span class="ssc-hotel-card-placeholder" aria-hidden="true"></span>';
-        $html .= '</a>';
-        $html .= '<div class="ssc-hotel-card-body">';
-        $html .= '<h3 class="ssc-hotel-card-title"><a href="' . esc_url( $url ) . '">' . esc_html( get_the_title( $hotel_id ) ) . '</a></h3>';
-        $sub = array();
-        if ( $city_term ) {
-            $sub[] = $city_term->name;
+        $previous = $post;
+        // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- The theme template requires the hotel to be the current post; restored below.
+        $post = $hotel;
+        setup_postdata( $post );
+        $html = '';
+        $card = locate_template( $wide ? 'templates/property_unit_wide.php' : 'templates/property_unit.php' );
+        if ( $card !== '' ) {
+            ob_start();
+            include $card;
+            $html = (string) ob_get_clean();
+            $html = self::inject_hotel_search_meta( $html, $hotel->ID );
         }
-        if ( $room_count > 0 ) {
-            $sub[] = sprintf(
+        // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Restores the global saved before the swap.
+        $post = $previous;
+        wp_reset_postdata();
+        return $html;
+    }
+
+    /**
+     * Hotel meta line for theme listing cards ("4 rooms · Kolatoli").
+     *
+     * The theme's property-unit card prints guests/bedrooms from room meta
+     * the hotel post does not carry, leaving that line empty. This builds
+     * the hotel equivalent from linked rooms so the card still answers
+     * "how many rooms, which area".
+     *
+     * @param int $hotel_id Hotel post ID.
+     * @return string Meta line, empty when there is nothing to show.
+     */
+    public static function hotel_search_meta( $hotel_id ) {
+        $hotel_id = intval( $hotel_id );
+        $parts    = array();
+        $rooms    = Repository::get_room_count( $hotel_id );
+        if ( $rooms > 0 ) {
+            $parts[] = sprintf(
                 /* translators: %d: number of rooms */
-                esc_html( _n( '%d room', '%d rooms', $room_count, 'staysuite-companion' ) ),
-                intval( $room_count )
+                esc_html( _n( '%d room', '%d rooms', $rooms, 'staysuite-companion' ) ),
+                intval( $rooms )
             );
         }
-        if ( ! empty( $sub ) ) {
-            $html .= '<div class="ssc-hotel-card-sub">' . esc_html( implode( ' · ', $sub ) ) . '</div>';
+        if ( taxonomy_exists( 'property_area' ) ) {
+            $areas = get_the_terms( $hotel_id, 'property_area' );
+            if ( is_array( $areas ) && $areas !== array() ) {
+                usort(
+                    $areas,
+                    function ( $a, $b ) {
+                        return strcmp( $a->name, $b->name );
+                    }
+                );
+                $parts[] = $areas[0]->name;
+            }
         }
-        if ( $min_price > 0 ) {
-            $html .= '<div class="ssc-hotel-card-price">' . sprintf(
-                /* translators: %s: starting price */
-                esc_html__( 'from %s / night', 'staysuite-companion' ),
-                Repository::format_price( $min_price )
-            ) . '</div>';
+        return implode( ' · ', $parts );
+    }
+
+    /**
+     * Inject the hotel meta line into a theme property-unit card.
+     *
+     * Targets the card's category/actions line so the rooms + area read as
+     * part of the card body. Falls back to the untouched card when the
+     * anchor is missing or there is no meta to show.
+     *
+     * @param string $card_html Theme card HTML.
+     * @param int    $hotel_id  Hotel post ID.
+     * @return string Card HTML with the meta line injected.
+     */
+    public static function inject_hotel_search_meta( $card_html, $hotel_id ) {
+        $line = self::hotel_search_meta( $hotel_id );
+        if ( $line !== '' ) {
+            $meta_div  = '<div class="category_tagline ssc-hotel-meta">' . esc_html( $line ) . '</div>';
+            $injected  = preg_replace(
+                '#(<div class="category_tagline actions_icon">.*?</div>)#s',
+                '$1' . $meta_div,
+                $card_html,
+                1
+            );
+            if ( is_string( $injected ) ) {
+                $card_html = $injected;
+            }
         }
-        $html .= '</div></article>';
-        return $html;
+        // Hotels have no room-type taxonomy of their own; the synced
+        // category/action terms only exist to feed search, so the
+        // "Apartment · Entire home" line would mislead — drop it.
+        $stripped = preg_replace(
+            '#<div class="category_tagline actions_icon">.*?</div>#s',
+            '',
+            $card_html,
+            1
+        );
+        return is_string( $stripped ) ? $stripped : $card_html;
     }
 
     /**
@@ -697,12 +784,17 @@ class Renderer {
      * @return array<string,mixed> Elementor icon setting.
      */
     private static function search_icon( $file ) {
+        // Icons_Manager cannot resolve our local svg id=0 attachment; use
+        // inline Font Awesome glyphs instead so the UI elements render.
+        $fa = array(
+            'location.svg' => 'fas fa-map-marker-alt',
+            'calendar.svg' => 'fas fa-calendar-alt',
+            'user.svg'     => 'fas fa-user',
+            'search.svg'   => 'fas fa-search',
+        );
         return array(
-            'value'   => array(
-                'url' => SSC_URL . 'assets/images/icons/' . $file,
-                'id'  => 0,
-            ),
-            'library' => 'svg',
+            'value'   => isset( $fa[ $file ] ) ? $fa[ $file ] : 'fas fa-search',
+            'library' => 'fa-solid',
         );
     }
 

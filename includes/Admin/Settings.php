@@ -66,6 +66,7 @@ class Settings {
             'color_submit'        => '#137699',
             'color_hover'         => '#022947',
             'delete_on_uninstall' => 0,
+            'search_result'       => 'hotels',
         );
     }
 
@@ -86,6 +87,7 @@ class Settings {
         $all['color_submit'] = self::hex_or_default( $all['color_submit'], '#137699' );
         $all['color_hover']  = self::hex_or_default( $all['color_hover'], '#022947' );
         $all['delete_on_uninstall'] = ! empty( $all['delete_on_uninstall'] ) ? 1 : 0;
+        $all['search_result'] = ( $all['search_result'] === 'listings' ) ? 'listings' : 'hotels';
         if ( $key === null ) {
             return $all;
         }
@@ -112,6 +114,7 @@ class Settings {
             'color_submit'   => self::hex_or_default( $raw['color_submit'] ?? '', '#137699' ),
             'color_hover'    => self::hex_or_default( $raw['color_hover'] ?? '', '#022947' ),
             'delete_on_uninstall' => ! empty( $raw['delete_on_uninstall'] ) ? 1 : 0,
+            'search_result'  => ( isset( $raw['search_result'] ) && $raw['search_result'] === 'listings' ) ? 'listings' : 'hotels',
         );
     }
 
@@ -138,7 +141,7 @@ class Settings {
         add_menu_page(
             esc_html__( 'StaySuite', 'staysuite-companion' ),
             esc_html__( 'StaySuite', 'staysuite-companion' ),
-            'manage_options',
+            'edit_posts',
             self::MENU_SLUG,
             array( $this, 'render_page' ),
             self::logo_icon(),
@@ -148,16 +151,23 @@ class Settings {
             self::MENU_SLUG,
             esc_html__( 'Settings', 'staysuite-companion' ),
             esc_html__( 'Settings', 'staysuite-companion' ),
-            'manage_options',
+            'edit_posts',
             self::MENU_SLUG . '&tab=settings',
             array( $this, 'render_page' )
         );
+
+        global $submenu;
+        $first = $submenu[ self::MENU_SLUG ][0] ?? null;
+        if ( is_array( $first ) && ( $first[2] ?? '' ) === self::MENU_SLUG ) {
+            unset( $submenu[ self::MENU_SLUG ][0] );
+        }
+
         if ( ! defined( 'SSC_PRO_VERSION' ) ) {
             add_submenu_page(
                 self::MENU_SLUG,
                 esc_html__( 'Go Pro', 'staysuite-companion' ),
                 esc_html__( 'Go Pro', 'staysuite-companion' ),
-                'manage_options',
+                'edit_posts',
                 self::MENU_SLUG . '&tab=go-pro',
                 array( $this, 'render_page' )
             );
@@ -188,12 +198,15 @@ class Settings {
      */
     public function highlight_tab( $submenu_file, $parent_file ) {
         // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only menu highlight; the Settings screen itself is capability + nonce protected.
-        if ( $parent_file !== self::MENU_SLUG || ! isset( $_GET['tab'] ) ) {
+        if ( $parent_file !== self::MENU_SLUG ) {
             return $submenu_file;
+        }
+        if ( ! isset( $_GET['tab'] ) ) {
+            return self::MENU_SLUG . '&tab=settings';
         }
         $tab = sanitize_key( wp_unslash( $_GET['tab'] ) );
         // phpcs:enable WordPress.Security.NonceVerification.Recommended
-        if ( ! in_array( $tab, array( 'settings', 'go-pro' ), true ) ) {
+        if ( ! in_array( $tab, array( 'settings', 'go-pro', 'license', 'ai' ), true ) ) {
             return $submenu_file;
         }
         return self::MENU_SLUG . '&tab=' . $tab;
@@ -328,7 +341,7 @@ class Settings {
      * @return bool True for admins.
      */
     public function rest_auth() {
-        return current_user_can( 'manage_options' );
+        return current_user_can( 'edit_posts' );
     }
 
     /**

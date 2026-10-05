@@ -68,9 +68,10 @@ class Repository {
         // phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value, WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Bounded, indexed lookup of the rooms belonging to one hotel.
         return new WP_Query(
             array(
-				'post_type'      => 'estate_property',
-				'post_status'    => 'publish',
-				'posts_per_page' => intval( $limit ),
+				'post_type'       => 'estate_property',
+				'post_status'     => 'publish',
+				'posts_per_page'  => intval( $limit ),
+				'ssc_room_lookup' => true,
 				'meta_key'       => self::ROOM_HOTEL_META,
 				'meta_value'     => intval( $hotel_id ),
 				'meta_compare'   => '=',
@@ -99,9 +100,10 @@ class Repository {
         // phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- COUNT-only query on an indexed meta key.
         $query = new WP_Query(
             array(
-				'post_type'      => 'estate_property',
-				'post_status'    => 'publish',
-				'posts_per_page' => 1,
+				'post_type'       => 'estate_property',
+				'post_status'     => 'publish',
+				'posts_per_page'  => 1,
+				'ssc_room_lookup' => true,
 				'meta_key'       => self::ROOM_HOTEL_META,
 				'meta_value'     => intval( $hotel_id ),
 				'meta_compare'   => '=',
@@ -305,6 +307,93 @@ class Repository {
             'capacity' => intval( get_post_meta( $room_id, 'guest_no', true ) ),
             'features' => $features,
         );
+    }
+
+    /**
+     * Get IDs of all published rooms linked to a hotel.
+     *
+     * Unlike get_rooms(), this includes rooms without a price, so term
+     * syncing sees every room that belongs to the hotel.
+     *
+     * @param int $hotel_id Hotel post ID.
+     * @return int[] Room post IDs.
+     */
+    public static function get_room_ids( $hotel_id ) {
+        // phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Bounded ID-only lookup of one hotel's rooms.
+        $ids = get_posts(
+            array(
+				'post_type'       => 'estate_property',
+				'post_status'     => 'publish',
+				'posts_per_page'  => -1,
+				'fields'          => 'ids',
+				'no_found_rows'   => true,
+				'ssc_room_lookup' => true,
+				'meta_key'       => self::ROOM_HOTEL_META,
+				'meta_value'     => intval( $hotel_id ),
+				'meta_compare'   => '=',
+            )
+        );
+        // phpcs:enable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+        if ( ! is_array( $ids ) ) {
+            return array();
+        }
+        return array_values( array_unique( array_map( 'intval', $ids ) ) );
+    }
+
+    /**
+     * Sync a hotel's display data from its linked rooms.
+     *
+     * Hotels carry no location/category taxonomy of their own, so the
+     * theme's property-unit card and map pins would render empty for them.
+     * Inherit the rooms' union: min price into property_price, lat/lng via
+     * ensure_coords(), shared terms into the hotel's own term lists, and the
+     * first city into _ssc_city when unset.
+     *
+     * @param int $hotel_id Hotel post ID.
+     * @return void
+     */
+    public static function sync_hotel_data( $hotel_id ) {
+        $hotel_id = intval( $hotel_id );
+        if ( get_post_type( $hotel_id ) !== HotelCPT::POST_TYPE ) {
+            return;
+        }
+        $room_ids = self::get_room_ids( $hotel_id );
+
+        $min = self::get_min_price( $hotel_id );
+        if ( $min > 0 ) {
+            update_post_meta( $hotel_id, 'property_price', $min );
+        } else {
+            delete_post_meta( $hotel_id, 'property_price' );
+        }
+
+        self::ensure_coords( $hotel_id );
+
+        $taxonomies = array( 'property_city', 'property_area', 'property_category', 'property_action_category', 'property_status' );
+        foreach ( $taxonomies as $taxonomy ) {
+            if ( ! taxonomy_exists( $taxonomy ) ) {
+                continue;
+            }
+            $term_ids = array();
+            foreach ( $room_ids as $room_id ) {
+                $terms = get_the_terms( $room_id, $taxonomy );
+                if ( ! is_array( $terms ) ) {
+                    continue;
+                }
+                foreach ( $terms as $term ) {
+                    if ( $term instanceof WP_Term ) {
+                        $term_ids[] = intval( $term->term_id );
+                    }
+                }
+            }
+            wp_set_object_terms( $hotel_id, array_values( array_unique( $term_ids ) ), $taxonomy );
+        }
+
+        if ( '' === get_post_meta( $hotel_id, '_ssc_city', true ) ) {
+            $cities = get_the_terms( $hotel_id, 'property_city' );
+            if ( is_array( $cities ) && isset( $cities[0] ) && $cities[0] instanceof WP_Term ) {
+                update_post_meta( $hotel_id, '_ssc_city', $cities[0]->slug );
+            }
+        }
     }
 
     /**
