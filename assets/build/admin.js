@@ -291,6 +291,36 @@ function Check({
     onChange: e => onChange(e.target.checked ? 1 : 0)
   }), " ", label);
 }
+function ConfirmDeleteModal({
+  open,
+  onConfirm,
+  onCancel
+}) {
+  if (!open) {
+    return null;
+  }
+  return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "ssc-confirm-backdrop",
+    role: "alertdialog",
+    "aria-modal": "true"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "ssc-confirm-modal"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h3", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Delete all StaySuite data?', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('This permanently deletes every StaySuite post, term, and option (Hotels, Rooms, Group Requests, settings) when the plugin is uninstalled. That data cannot be recovered. Are you sure you want to do this?', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "ssc-confirm-actions"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    type: "button",
+    className: "button button-primary",
+    style: {
+      background: '#d63638',
+      borderColor: '#d63638'
+    },
+    onClick: onConfirm
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Yes, delete on uninstall', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
+    type: "button",
+    className: "button",
+    onClick: onCancel
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Cancel', 'staysuite-companion')))));
+}
 function Row({
   label,
   hint,
@@ -313,6 +343,7 @@ function SettingsTab() {
     save,
     feedback
   } = useSettings();
+  const [confirmDelete, setConfirmDelete] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   if (!settings) {
     return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Loading…', 'staysuite-companion'));
   }
@@ -322,7 +353,7 @@ function SettingsTab() {
   }));
   return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "ssc-tab-panel"
-  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('General', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(Row, {
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Settings', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(Row, {
     label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Individual / Group capsule', 'staysuite-companion')
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(Check, {
     label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Show the capsule above the homepage search', 'staysuite-companion'),
@@ -421,14 +452,24 @@ function SettingsTab() {
     value: settings.color_hover,
     onChange: e => set('color_hover')(e.target.value),
     title: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Hover', 'staysuite-companion')
-  }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Advanced', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(Row, {
+  }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
+    className: "ssc-danger-zone"
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Danger Zone', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "ssc-danger-zone"
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(Row, {
     label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Uninstall', 'staysuite-companion'),
     hint: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('When on, uninstalling deletes Hotels, Group Requests and all StaySuite data. Off keeps your content.', 'staysuite-companion')
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(Check, {
     label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Delete all StaySuite data when the plugin is uninstalled', 'staysuite-companion'),
     checked: settings.delete_on_uninstall,
-    onChange: set('delete_on_uninstall')
-  })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    onChange: value => {
+      if (value) {
+        setConfirmDelete(true);
+        return;
+      }
+      set('delete_on_uninstall')(0);
+    }
+  }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "ssc-form-actions"
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("button", {
     type: "button",
@@ -436,6 +477,13 @@ function SettingsTab() {
     onClick: save
   }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Save settings', 'staysuite-companion'))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(FeedbackToast, {
     feedback: feedback
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(ConfirmDeleteModal, {
+    open: confirmDelete,
+    onConfirm: () => {
+      set('delete_on_uninstall')(1);
+      setConfirmDelete(false);
+    },
+    onCancel: () => setConfirmDelete(false)
   }));
 }
 const PRO_FEATURES = [(0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Multi-room selection with combined pricing summary', 'staysuite-companion'), (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Quote-to-invoice pipeline with deposits and reminders', 'staysuite-companion'), (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Seasonal pricing display and scheduled sales', 'staysuite-companion'), (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('OTA availability sync (Booking.com, Airbnb)', 'staysuite-companion'), (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('AI group concierge on your own API key', 'staysuite-companion'), (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Analytics, upsell add-ons and bulk importers', 'staysuite-companion')];
@@ -512,7 +560,7 @@ function AdminApp({
     type: "button",
     role: "tab",
     "aria-selected": tab.slug === active,
-    className: tab.slug === active ? 'ssc-tab-active' : '',
+    className: `${tab.slug === active ? 'ssc-tab-active' : ''}${tab.slug === 'go-pro' ? ' ssc-tab-go-pro' : ''}`,
     onClick: () => select(tab.slug)
   }, tab.title))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "ssc-admin-body"
@@ -526,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const proActive = root.dataset.pro === '1';
   const base = [{
     slug: 'settings',
-    title: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('General', 'staysuite-companion'),
+    title: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Settings', 'staysuite-companion'),
     render: SettingsTab
   }];
   if (!proActive) {

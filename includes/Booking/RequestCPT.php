@@ -51,6 +51,56 @@ class RequestCPT {
         add_action( 'admin_footer', array( $this, 'back_to_list' ) );
         add_filter( 'manage_' . self::POST_TYPE . '_posts_columns', array( $this, 'add_list_columns' ) );
         add_action( 'manage_' . self::POST_TYPE . '_posts_custom_column', array( $this, 'render_list_column' ), 10, 2 );
+        add_action( 'admin_menu', array( $this, 'add_menu_badges' ), 999 );
+    }
+
+    /**
+     * Number of published requests whose workflow status is pending.
+     *
+     * @return int Pending request count.
+     */
+    private static function pending_count() {
+        global $wpdb;
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery -- No core API: request status lives in post meta.
+        $prepared = $wpdb->prepare(
+            "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id WHERE p.post_type = %s AND p.post_status = 'publish' AND pm.meta_key = %s AND pm.meta_value = 'pending'",
+            self::POST_TYPE,
+            '_ssc_status'
+        );
+        // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $prepared was built with $wpdb->prepare() above.
+        return intval( $wpdb->get_var( $prepared ) );
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery
+    }
+
+    /**
+     * Show a pending count bubble beside StaySuite and its Requests
+     * submenu whenever at least one request exists.
+     *
+     * @return void
+     */
+    public function add_menu_badges() {
+        // Only published requests in the pending workflow state drive the bubble.
+        $total = self::pending_count();
+        if ( $total < 1 ) {
+            return;
+        }
+        // Core's .awaiting-mod pill is not always visible against our own dark
+        // submenu, so carry the full pill styles inline.
+        $badge = ' <span class="awaiting-mod" style="display:inline-block;box-sizing:border-box;margin:1px 0 -1px 4px;padding:0 5px;min-width:18px;height:18px;border-radius:9px;background:#d63638;color:#fff;font-size:11px;line-height:18px;text-align:center;font-weight:600;">' . esc_html( (string) $total ) . '</span>';
+        global $menu, $submenu; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Badges are appended to the already-built menu, not overridden.
+        foreach ( (array) $menu as $i => $item ) { // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- See above.
+            if ( isset( $item[2] ) && $item[2] === 'ssc-staysuite' ) {
+                $menu[ $i ][0] .= $badge; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- See above.
+                break;
+            }
+        }
+        if ( isset( $submenu['ssc-staysuite'] ) ) { // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- See above.
+            foreach ( (array) $submenu['ssc-staysuite'] as $i => $item ) { // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- See above.
+                if ( isset( $item[2] ) && false !== strpos( (string) $item[2], 'edit.php?post_type=' . self::POST_TYPE ) ) {
+                    $submenu['ssc-staysuite'][ $i ][0] .= $badge; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- See above.
+                }
+            }
+        }
     }
 
     /**
@@ -97,7 +147,7 @@ class RequestCPT {
 					'edit_item'          => esc_html__( 'Edit Request', 'staysuite-companion' ),
 					'search_items'       => esc_html__( 'Search Requests', 'staysuite-companion' ),
 					'not_found'          => esc_html__( 'No requests found', 'staysuite-companion' ),
-					'all_items'          => esc_html__( 'All Requests', 'staysuite-companion' ),
+					'all_items'          => esc_html__( 'Requests', 'staysuite-companion' ),
 				),
 				'public'       => false,
 				'show_ui'      => true,

@@ -89,6 +89,30 @@ function Check({ label, checked, onChange }) {
     );
 }
 
+function ConfirmDeleteModal({ open, onConfirm, onCancel }) {
+    if (!open) {
+        return null;
+    }
+    return (
+        <div className="ssc-confirm-backdrop" role="alertdialog" aria-modal="true">
+            <div className="ssc-confirm-modal">
+                <h3>{__('Delete all StaySuite data?', 'staysuite-companion')}</h3>
+                <p>
+                    {__('This permanently deletes every StaySuite post, term, and option (Hotels, Rooms, Group Requests, settings) when the plugin is uninstalled. That data cannot be recovered. Are you sure you want to do this?', 'staysuite-companion')}
+                </p>
+                <div className="ssc-confirm-actions">
+                    <button type="button" className="button button-primary" style={{ background: '#d63638', borderColor: '#d63638' }} onClick={onConfirm}>
+                        {__('Yes, delete on uninstall', 'staysuite-companion')}
+                    </button>
+                    <button type="button" className="button" onClick={onCancel}>
+                        {__('Cancel', 'staysuite-companion')}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function Row({ label, hint, children }) {
     return (
         <div className="ssc-form-row">
@@ -103,13 +127,14 @@ function Row({ label, hint, children }) {
 
 function SettingsTab() {
     const { settings, setSettings, save, feedback } = useSettings();
+    const [confirmDelete, setConfirmDelete] = useState(false);
     if (!settings) {
         return <p>{__('Loading…', 'staysuite-companion')}</p>;
     }
     const set = (key) => (value) => setSettings((prev) => ({ ...prev, [key]: value }));
     return (
         <div className="ssc-tab-panel">
-            <h2>{__('General', 'staysuite-companion')}</h2>
+            <h2>{__('Settings', 'staysuite-companion')}</h2>
             <Row label={__('Individual / Group capsule', 'staysuite-companion')}>
                 <Check
                     label={__('Show the capsule above the homepage search', 'staysuite-companion')}
@@ -221,7 +246,8 @@ function SettingsTab() {
                     />
                 </label>
             </Row>
-            <h2>{__('Advanced', 'staysuite-companion')}</h2>
+            <h2 className="ssc-danger-zone">{__('Danger Zone', 'staysuite-companion')}</h2>
+            <div className="ssc-danger-zone">
             <Row
                 label={__('Uninstall', 'staysuite-companion')}
                 hint={__(
@@ -232,15 +258,30 @@ function SettingsTab() {
                 <Check
                     label={__('Delete all StaySuite data when the plugin is uninstalled', 'staysuite-companion')}
                     checked={settings.delete_on_uninstall}
-                    onChange={set('delete_on_uninstall')}
+                    onChange={(value) => {
+                        if (value) {
+                            setConfirmDelete(true);
+                            return;
+                        }
+                        set('delete_on_uninstall')(0);
+                    }}
                 />
             </Row>
+            </div>
             <div className="ssc-form-actions">
                 <button type="button" className="button button-primary" onClick={save}>
                     {__('Save settings', 'staysuite-companion')}
                 </button>
             </div>
             <FeedbackToast feedback={feedback} />
+            <ConfirmDeleteModal
+                open={confirmDelete}
+                onConfirm={() => {
+                    set('delete_on_uninstall')(1);
+                    setConfirmDelete(false);
+                }}
+                onCancel={() => setConfirmDelete(false)}
+            />
         </div>
     );
 }
@@ -321,15 +362,15 @@ function AdminApp({ logo, tabs, initial }) {
                 </span>
             </div>
             <div className="ssc-admin-tabs" role="tablist">
-                {tabs.map((tab) => (
-                    <button
-                        key={tab.slug}
-                        type="button"
-                        role="tab"
-                        aria-selected={tab.slug === active}
-                        className={tab.slug === active ? 'ssc-tab-active' : ''}
-                        onClick={() => select(tab.slug)}
-                    >
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.slug}
+                            type="button"
+                            role="tab"
+                            aria-selected={tab.slug === active}
+                            className={`${tab.slug === active ? 'ssc-tab-active' : ''}${tab.slug === 'go-pro' ? ' ssc-tab-go-pro' : ''}`}
+                            onClick={() => select(tab.slug)}
+                        >
                         {tab.title}
                     </button>
                 ))}
@@ -347,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     const proActive = root.dataset.pro === '1';
-    const base = [{ slug: 'settings', title: __('General', 'staysuite-companion'), render: SettingsTab }];
+    const base = [{ slug: 'settings', title: __('Settings', 'staysuite-companion'), render: SettingsTab }];
     if (!proActive) {
         base.push({ slug: 'go-pro', title: __('Go Pro', 'staysuite-companion'), render: GoProTab });
     }
