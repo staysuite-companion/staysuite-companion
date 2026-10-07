@@ -2,7 +2,7 @@
 
 Hotels, homepage booking blocks and group quotes for the [WpRentals](https://themeforest.net/item/wprentals-booking-accommodation-wordpress-theme/12332978) theme — without touching theme files.
 
-![License](https://img.shields.io/badge/license-GPL--3.0--or--later-blue) ![Requires PHP](https://img.shields.io/badge/php-%3E%3D7.4-777) ![WP](https://img.shields.io/badge/wordpress-%3E%3D6.0-21759B)
+![License](https://img.shields.io/badge/license-GPL--3.0--or--later-blue) ![Requires PHP](https://img.shields.io/badge/php-%3E%3D8.1-777) ![WP](https://img.shields.io/badge/wordpress-%3E%3D6.0-21759B)
 
 ## What it does
 

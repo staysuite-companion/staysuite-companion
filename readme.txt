@@ -3,7 +3,7 @@ Contributors: tanmjay
 Tags: wprentals, hotel, booking, group booking, blocks
 Requires at least: 6.0
 Tested up to: 7.1.2
-Requires PHP: 7.4
+Requires PHP: 8.1
 Stable tag: 1.0.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -27,7 +27,7 @@ Source code and issue tracker: https://github.com/staysuite-companion/staysuite-
 = Requirements =
 
 * WordPress 6.0 or higher
-* PHP 7.4 or higher (PHP 8.3 or newer recommended)
+* PHP 8.1 or higher (PHP 8.3 or newer recommended)
 * The WpRentals theme, installed and active
 
 == Installation ==

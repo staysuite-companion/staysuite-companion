@@ -106,7 +106,7 @@ final class Notice {
         }
         printf(
             '<div class="notice notice-warning"><p>%s</p></div>',
-            esc_html__( 'StaySuite Companion supports PHP 7.4+, but PHP 8.3 or newer is strongly recommended for better performance and security.', 'staysuite-companion' )
+            esc_html__( 'StaySuite Companion supports PHP 8.1+, but PHP 8.3 or newer is strongly recommended for better performance and security.', 'staysuite-companion' )
         );
     }
 
