@@ -88,6 +88,7 @@ class ComposerStaticInit68a864c75adfc4ceb5411937eed979bf
         'StaySuite\\Companion\\Booking\\QuoteForm' => __DIR__ . '/../..' . '/includes/Booking/QuoteForm.php',
         'StaySuite\\Companion\\Booking\\RequestCPT' => __DIR__ . '/../..' . '/includes/Booking/RequestCPT.php',
         'StaySuite\\Companion\\Frontend\\CardBadge' => __DIR__ . '/../..' . '/includes/Frontend/CardBadge.php',
+        'StaySuite\\Companion\\Frontend\\InvoiceEmail' => __DIR__ . '/../..' . '/includes/Frontend/InvoiceEmail.php',
         'StaySuite\\Companion\\Frontend\\PageSetup' => __DIR__ . '/../..' . '/includes/Frontend/PageSetup.php',
         'StaySuite\\Companion\\Frontend\\PageTemplate' => __DIR__ . '/../..' . '/includes/Frontend/PageTemplate.php',
         'StaySuite\\Companion\\Frontend\\RoomSingleLink' => __DIR__ . '/../..' . '/includes/Frontend/RoomSingleLink.php',
