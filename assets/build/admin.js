@@ -452,7 +452,19 @@ function SettingsTab() {
     value: settings.color_hover,
     onChange: e => set('color_hover')(e.target.value),
     title: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Hover', 'staysuite-companion')
-  }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
+  }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Invoices', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(Row, {
+    label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Brand display', 'staysuite-companion'),
+    hint: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Controls how the invoice header shows the hotel brand.', 'staysuite-companion')
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("select", {
+    value: ['logo_name', 'logo', 'name'].includes(settings.invoice_brand) ? settings.invoice_brand : 'logo_name',
+    onChange: e => set('invoice_brand')(e.target.value)
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
+    value: "logo_name"
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Logo and hotel name', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
+    value: "logo"
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Logo only', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("option", {
+    value: "name"
+  }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Name only', 'staysuite-companion')))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
     className: "ssc-danger-zone"
   }, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Danger Zone', 'staysuite-companion')), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "ssc-danger-zone"

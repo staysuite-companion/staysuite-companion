@@ -15,6 +15,7 @@ Submit buttons, hovers and search icons are **not hardcoded**. They are emitted 
 
 * `ssc-homepage` — StaySuite Homepage template (transparent header, capsule, dividers).
 * `ssc-has-hero` — a hero block is present (header search suppressed, hero calendar binding).
+* `ssc-invoice-page` — branded invoice template (invoices, mockup data until the quote-to-invoice pipeline ships).
 * `single-ssc_hotel` — hotel singles (theme map header suppressed).
 
 ## Stylesheet

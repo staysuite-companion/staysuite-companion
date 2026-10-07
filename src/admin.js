@@ -246,6 +246,20 @@ function SettingsTab() {
                     />
                 </label>
             </Row>
+            <h2>{__('Invoices', 'staysuite-companion')}</h2>
+            <Row
+                label={__('Brand display', 'staysuite-companion')}
+                hint={__('Controls how the invoice header shows the hotel brand.', 'staysuite-companion')}
+            >
+                <select
+                    value={['logo_name', 'logo', 'name'].includes(settings.invoice_brand) ? settings.invoice_brand : 'logo_name'}
+                    onChange={(e) => set('invoice_brand')(e.target.value)}
+                >
+                    <option value="logo_name">{__('Logo and hotel name', 'staysuite-companion')}</option>
+                    <option value="logo">{__('Logo only', 'staysuite-companion')}</option>
+                    <option value="name">{__('Name only', 'staysuite-companion')}</option>
+                </select>
+            </Row>
             <h2 className="ssc-danger-zone">{__('Danger Zone', 'staysuite-companion')}</h2>
             <div className="ssc-danger-zone">
             <Row

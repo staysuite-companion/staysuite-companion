@@ -29,6 +29,13 @@ class PageTemplate {
     const HOMEPAGE_SLUG = 'ssc-homepage';
 
     /**
+     * Template slug for the branded invoice page.
+     *
+     * @var string
+     */
+    const INVOICE_SLUG = 'ssc-invoice';
+
+    /**
      * Wire up WordPress hooks.
      *
      * @return void
@@ -48,6 +55,7 @@ class PageTemplate {
      */
     public function add_templates( $templates ) {
         $templates[ self::HOMEPAGE_SLUG ] = esc_html__( 'StaySuite Homepage', 'staysuite-companion' );
+        $templates[ self::INVOICE_SLUG ]  = esc_html__( 'StaySuite Invoice', 'staysuite-companion' );
         return $templates;
     }
 
@@ -64,6 +72,12 @@ class PageTemplate {
                 return $plugin_template;
             }
         }
+        if ( is_page() && get_page_template_slug() === self::INVOICE_SLUG ) {
+            $plugin_template = SSC_PATH . 'templates/page-ssc-invoice.php';
+            if ( file_exists( $plugin_template ) ) {
+                return $plugin_template;
+            }
+        }
         return $template;
     }
 
@@ -76,6 +90,9 @@ class PageTemplate {
     public function add_homepage_class( $classes ) {
         if ( is_page() && get_page_template_slug() === self::HOMEPAGE_SLUG ) {
             $classes[] = 'ssc-homepage';
+        }
+        if ( is_page() && get_page_template_slug() === self::INVOICE_SLUG ) {
+            $classes[] = 'ssc-invoice-page';
         }
         return $classes;
     }

@@ -297,6 +297,7 @@ final class Plugin {
         $this->container['group_request']    = new Booking\RequestCPT();
         $this->container['quote_form']       = new Booking\QuoteForm();
         $this->container['quote_ajax']       = new Booking\QuoteAjax();
+        $this->container['invoice_email']    = new Frontend\InvoiceEmail();
 
         if ( is_admin() ) {
             $this->container['assign_page'] = new AssignPage();
