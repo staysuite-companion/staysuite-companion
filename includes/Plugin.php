@@ -44,7 +44,7 @@ final class Plugin {
      *
      * @var string
      */
-    const MIN_PHP = '8.1';
+    const MIN_PHP = '7.4';
 
     /**
      * Plugin text domain.

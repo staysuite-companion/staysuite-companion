@@ -5,7 +5,7 @@
  * Description:       Hotel pages, homepage booking blocks and group quote requests for the WpRentals theme. No theme files are modified.
  * Version:           1.0.0
  * Requires at least: 6.0
- * Requires PHP:      8.1
+ * Requires PHP:      7.4
  * Author:            Tanmay Kirtania
  * Author URI:        https://jktanmay.com
  * License:           GPL v3 or later

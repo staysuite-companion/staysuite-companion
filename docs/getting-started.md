@@ -2,7 +2,7 @@
 
 ## Requirements
 
-* WordPress 6.0+, PHP 8.1+ (8.3+ recommended)
+* WordPress 6.0+, PHP 7.4+ (8.3+ recommended)
 * **WpRentals theme active** — the plugin refuses to activate without it, since it reuses the theme's search, booking, map and slider components.
 
 ## Install

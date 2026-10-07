@@ -65,6 +65,7 @@ final class Notice {
      */
     public function register() {
         add_action( 'admin_notices', array( $this, 'theme_check_notice' ) );
+        add_action( 'admin_notices', array( $this, 'php_upgrade_notice' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'notice_assets' ) );
         add_action( 'wp_ajax_' . self::AJAX_ACTION, array( $this, 'dismiss_notice' ) );
     }
@@ -87,6 +88,25 @@ final class Notice {
                     Plugin::MIN_PHP
                 )
             )
+        );
+    }
+
+    /**
+     * Suggest upgrading to PHP 8.3 or newer when the server is on an older
+     * 7.x/8.0–8.2 runtime. Admins only, rendered on normal admin screens.
+     *
+     * @return void
+     */
+    public function php_upgrade_notice() {
+        if ( version_compare( PHP_VERSION, '8.3.0', '>=' ) ) {
+            return;
+        }
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        printf(
+            '<div class="notice notice-warning"><p>%s</p></div>',
+            esc_html__( 'StaySuite Companion supports PHP 7.4+, but PHP 8.3 or newer is strongly recommended for better performance and security.', 'staysuite-companion' )
         );
     }
 
