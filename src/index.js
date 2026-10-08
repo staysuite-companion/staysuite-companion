@@ -10,6 +10,7 @@ import CarouselNav from './carousels/Carousel';
 import BookingForm from './booking/BookingForm';
 import SearchMode from './search/SearchMode';
 import mountSignupFields, { mountProfileGender } from './signup/SignupFields';
+import mountSubmitCta from './mobile/SubmitCta';
 
 document.addEventListener('DOMContentLoaded', () => {
     mountHotelBadges();
@@ -18,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     mountSearchModes();
     mountSignupFields();
     mountProfileGender();
+    mountSubmitCta();
     pruneHiddenHeaderSearch();
     mountHeroCalendars();
     mountHotelMaps();

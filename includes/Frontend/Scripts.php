@@ -98,6 +98,30 @@ class Scripts {
 				'gender_value' => Signup::gender_slug( get_current_user_id() ),
             )
         );
+        wp_localize_script(
+            self::APP_HANDLE, 'sscSubmitCta', self::submit_cta()
+        );
+    }
+
+    /**
+     * Mobile Submit Property call-to-action config.
+     *
+     * Mirrors the desktop header button (theme option wp_estate_show_submit
+     * + user_dashboard_add_step1 link) so the mobile drawer can render the
+     * CTA the theme never prints there. Logged-in owners already have Add
+     * New Listing in the drawer, so this targets logged-out visitors.
+     *
+     * @return array{show:int,url:string,label:string} CTA config.
+     */
+    private static function submit_cta() {
+        $show = function_exists( 'wprentals_get_option' ) && wprentals_get_option( 'wp_estate_show_submit', '' ) === 'yes';
+        $show = $show && ! empty( Settings::get( 'mobile_submit' ) );
+        $url = function_exists( 'wpestate_get_template_link' ) ? (string) wpestate_get_template_link( 'user_dashboard_add_step1.php' ) : '';
+        return array(
+            'show'  => ( $show && $url !== '' && ! is_user_logged_in() ) ? 1 : 0,
+            'url'   => esc_url_raw( $url ),
+            'label' => esc_html__( 'Submit Property', 'staysuite-companion' ),
+        );
     }
 
     /**

@@ -235,6 +235,17 @@ function SettingsTab() {
                     style={{ width: '100%', maxWidth: '480px' }}
                 />
             </Row>
+            <h2>{__('Header', 'staysuite-companion')}</h2>
+            <Row
+                label={__('Mobile Submit Property', 'staysuite-companion')}
+                hint={__('The theme only prints Submit Property in the desktop header. This adds the same call-to-action to the mobile drawer for logged-out visitors.', 'staysuite-companion')}
+            >
+                <Check
+                    label={__('Show Submit Property in the mobile drawer', 'staysuite-companion')}
+                    checked={settings.mobile_submit}
+                    onChange={set('mobile_submit')}
+                />
+            </Row>
             <h2>{__('Search colors', 'staysuite-companion')}</h2>
             <Row label={__('Color source', 'staysuite-companion')}>
                 <label style={{ display: 'block', marginBottom: '8px' }}>

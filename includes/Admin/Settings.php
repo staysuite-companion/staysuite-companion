@@ -70,6 +70,7 @@ class Settings {
             'signup_gender'       => 'profile',
             'confirmation_auto'   => 1,
             'confirmation_notes'  => '',
+            'mobile_submit'       => 1,
         );
     }
 
@@ -94,6 +95,7 @@ class Settings {
         $all['signup_gender'] = self::mode_or_default( $all['signup_gender'] ?? '', 'profile', array( 'off', 'profile', 'optional', 'required' ) );
         $all['confirmation_auto'] = ! empty( $all['confirmation_auto'] ) ? 1 : 0;
         $all['confirmation_notes'] = isset( $all['confirmation_notes'] ) ? sanitize_textarea_field( $all['confirmation_notes'] ) : '';
+        $all['mobile_submit'] = ! empty( $all['mobile_submit'] ) ? 1 : 0;
         if ( $key === null ) {
             return $all;
         }
@@ -141,6 +143,7 @@ class Settings {
             'signup_gender'    => self::mode_or_default( $raw['signup_gender'] ?? '', 'profile', array( 'off', 'profile', 'optional', 'required' ) ),
             'confirmation_auto' => ! empty( $raw['confirmation_auto'] ) ? 1 : 0,
             'confirmation_notes' => isset( $raw['confirmation_notes'] ) ? sanitize_textarea_field( $raw['confirmation_notes'] ) : '',
+            'mobile_submit' => ! empty( $raw['mobile_submit'] ) ? 1 : 0,
         );
     }
 
