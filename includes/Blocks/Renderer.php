@@ -50,15 +50,19 @@ class Renderer {
         if ( ! taxonomy_exists( $atts['taxonomy'] ) ) {
             return '';
         }
-        $terms = get_terms(
-            array(
-				'taxonomy'   => $atts['taxonomy'],
-				'number'     => $atts['number'],
-				'orderby'    => 'count',
-				'order'      => 'DESC',
-				'hide_empty' => $atts['hide_empty'],
-            )
-        );
+        if ( ! empty( $atts['include_slugs'] ) ) {
+            $terms = self::query_hand_picked_terms( $atts['taxonomy'], $atts['include_slugs'] );
+        } else {
+            $terms = get_terms(
+                array(
+					'taxonomy'   => $atts['taxonomy'],
+					'number'     => $atts['number'],
+					'orderby'    => 'count',
+					'order'      => 'DESC',
+					'hide_empty' => $atts['hide_empty'],
+                )
+            );
+        }
         if ( is_wp_error( $terms ) || empty( $terms ) ) {
             return '';
         }
@@ -90,7 +94,7 @@ class Renderer {
      * Normalize tablets attributes.
      *
      * @param array<string,mixed> $atts Raw attributes.
-     * @return array{taxonomy:string,number:int,hide_empty:bool,show_divider:bool} Normalized attributes.
+     * @return array{taxonomy:string,number:int,hide_empty:bool,include_slugs:string[],show_divider:bool} Normalized attributes.
      */
     private static function normalize_tablets_atts( $atts ) {
         $taxonomy = isset( $atts['taxonomy'] ) ? sanitize_key( $atts['taxonomy'] ) : 'property_city';
@@ -101,8 +105,69 @@ class Renderer {
             'taxonomy'     => $taxonomy,
             'number'       => isset( $atts['number'] ) ? max( 1, min( 24, intval( $atts['number'] ) ) ) : 6,
             'hide_empty'   => ! isset( $atts['hide_empty'] ) || (bool) $atts['hide_empty'],
+            'include_slugs' => self::parse_slug_list( isset( $atts['include_slugs'] ) ? $atts['include_slugs'] : array() ),
             'show_divider' => ! isset( $atts['show_divider'] ) || (bool) $atts['show_divider'],
         );
+    }
+
+    /**
+     * Parse a hand-picked term slug list from block or shortcode input.
+     *
+     * Blocks store an array of slugs; shortcodes pass a comma-separated
+     * string. Either way the result is deduplicated, capped and safe for
+     * a get_terms() slug query.
+     *
+     * @param string|string[] $raw Raw slug input.
+     * @return string[] Clean term slugs, in picked order.
+     */
+    private static function parse_slug_list( $raw ) {
+        $parts = is_array( $raw ) ? $raw : explode( ',', (string) $raw );
+        $slugs = array();
+        foreach ( $parts as $part ) {
+            $slug = sanitize_title( (string) $part );
+            if ( $slug !== '' && ! in_array( $slug, $slugs, true ) ) {
+                $slugs[] = $slug;
+            }
+            if ( count( $slugs ) >= 24 ) {
+                break;
+            }
+        }
+        return $slugs;
+    }
+
+    /**
+     * Fetch hand-picked terms in the order they were picked.
+     *
+     * Explicit picks always show, even when empty — the editor chose
+     * these terms on purpose. get_terms() has no slug-ordering, so the
+     * picked order is restored here.
+     *
+     * @param string   $taxonomy Taxonomy slug.
+     * @param string[] $slugs    Picked term slugs, in order.
+     * @return \WP_Term[] Terms in picked order; empty when none match.
+     */
+    private static function query_hand_picked_terms( $taxonomy, $slugs ) {
+        $terms = get_terms(
+            array(
+				'taxonomy'   => $taxonomy,
+				'slug'       => $slugs,
+				'hide_empty' => false,
+				'number'     => count( $slugs ),
+            )
+        );
+        if ( is_wp_error( $terms ) || ! is_array( $terms ) ) {
+            return array();
+        }
+        $order = array_flip( $slugs );
+        $sorted = array();
+        foreach ( $terms as $term ) {
+            if ( ! $term instanceof \WP_Term || ! isset( $order[ $term->slug ] ) ) {
+                continue;
+            }
+            $sorted[ intval( $order[ $term->slug ] ) ] = $term;
+        }
+        ksort( $sorted );
+        return array_values( $sorted );
     }
 
     /**

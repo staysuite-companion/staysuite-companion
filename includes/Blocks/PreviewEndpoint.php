@@ -311,11 +311,25 @@ class PreviewEndpoint {
      * @return array<string,mixed> Coerced attributes.
      */
     private function coerce_tablets( $attributes ) {
+        $slugs = array();
+        if ( isset( $attributes['include_slugs'] ) ) {
+            $raw = $attributes['include_slugs'];
+            if ( ! is_array( $raw ) ) {
+                $raw = explode( ',', (string) $raw );
+            }
+            foreach ( $raw as $part ) {
+                $slug = sanitize_title( (string) $part );
+                if ( $slug !== '' && ! in_array( $slug, $slugs, true ) ) {
+                    $slugs[] = $slug;
+                }
+            }
+        }
         return array(
-            'taxonomy'     => isset( $attributes['taxonomy'] ) ? sanitize_key( $attributes['taxonomy'] ) : 'property_city',
-            'number'       => isset( $attributes['number'] ) ? intval( $attributes['number'] ) : 6,
-            'hide_empty'   => ! empty( $attributes['hide_empty'] ),
-            'show_divider' => ! isset( $attributes['show_divider'] ) || ! empty( $attributes['show_divider'] ),
+            'taxonomy'      => isset( $attributes['taxonomy'] ) ? sanitize_key( $attributes['taxonomy'] ) : 'property_city',
+            'number'        => isset( $attributes['number'] ) ? intval( $attributes['number'] ) : 6,
+            'hide_empty'    => ! empty( $attributes['hide_empty'] ),
+            'include_slugs' => $slugs,
+            'show_divider'  => ! isset( $attributes['show_divider'] ) || ! empty( $attributes['show_divider'] ),
         );
     }
 

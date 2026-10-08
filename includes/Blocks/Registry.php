@@ -113,6 +113,13 @@ class Registry {
 						'type' => 'boolean',
 						'default' => true,
 					),
+					'include_slugs' => array(
+						'type' => 'array',
+						'default' => array(),
+						'items' => array(
+							'type' => 'string',
+						),
+					),
 					'show_divider' => array(
 						'type' => 'boolean',
 						'default' => true,
@@ -231,7 +238,7 @@ class Registry {
     }
 
     /**
-     * Shortcode: [ssc_term_tablets taxonomy number hide_empty].
+     * Shortcode: [ssc_term_tablets taxonomy number hide_empty include_slugs].
      *
      * @param array<string,string>|string $atts Shortcode attributes.
      * @return string Tablets HTML.
@@ -242,6 +249,7 @@ class Registry {
 				'taxonomy' => 'property_city',
 				'number' => 6,
 				'hide_empty' => '1',
+				'include_slugs' => '',
 				'show_divider' => '1',
             ),
             $atts,
@@ -252,6 +260,7 @@ class Registry {
 				'taxonomy'     => $atts['taxonomy'],
 				'number'       => $atts['number'],
 				'hide_empty'   => $atts['hide_empty'] === '1',
+				'include_slugs' => $atts['include_slugs'],
 				'show_divider' => $atts['show_divider'] === '1',
             )
         );
