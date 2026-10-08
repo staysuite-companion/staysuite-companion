@@ -124,7 +124,6 @@ function ensureFields(container, config) {
     if (config.showGenderOnSignup && !container.querySelector('[data-ssc-gender]')) {
         insertGenderAfterPhone(container, genderRow(config.genders, '', config.gender === 'required'));
     }
-    growModalDialog(container);
 }
 
 /**
@@ -146,16 +145,33 @@ function insertGenderAfterPhone(container, node) {
 }
 
 /**
- * Let the login modal grow with injected rows.
+ * Grow the login modal dialog by the measured height of injected rows.
  *
- * The theme fixes the dialog height in PHP from its own option flags,
- * so our extra rows overflow under the heading. Auto height keeps the
- * absolutely-positioned side image stretching with the dialog.
+ * The theme fixes the dialog height in PHP from its own option flags
+ * and vertically centers the register column (flex + height:100%), so
+ * extra rows push the heading over the first input. The dialog content
+ * is absolutely positioned, so height:auto collapses — explicit pixels
+ * are the only growth the theme layout model honors. Measured when the
+ * modal opens because hidden rows report zero height at page load.
  */
 function growModalDialog(container) {
     const dialog = container.closest('#loginmodal')?.querySelector('.modal-dialog');
-    if (dialog) {
-        dialog.style.height = 'auto';
+    if (!dialog || dialog.hasAttribute('data-ssc-grown')) {
+        return;
+    }
+    const px = (value) => parseInt(value, 10) || 0;
+    let extra = 0;
+    container.querySelectorAll('[data-ssc-signup]').forEach((row) => {
+        const style = window.getComputedStyle(row);
+        extra += row.offsetHeight + px(style.marginTop) + px(style.marginBottom);
+    });
+    if (!(extra > 0)) {
+        return;
+    }
+    const current = px(dialog.style.height) || dialog.offsetHeight || 0;
+    if (current > 0) {
+        dialog.setAttribute('data-ssc-grown', '1');
+        dialog.style.height = `${current + extra + 32}px`;
     }
 }
 
@@ -315,7 +331,13 @@ export default function mountSignupFields() {
     if (config.phone === 'off' && config.gender === 'off') {
         return;
     }
+    const grow = () => registerContainers().forEach(growModalDialog);
     registerContainers().forEach((container) => ensureFields(container, config));
+    grow();
+    // Hidden rows measure zero, so re-grow once the modal is visible.
+    if (typeof jQuery !== 'undefined' && jQuery.fn) {
+        jQuery(document).on('shown.bs.modal', '#loginmodal', grow);
+    }
     watchSubmits(config);
     watchAjax();
 }
