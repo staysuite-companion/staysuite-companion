@@ -6,8 +6,13 @@
     position: relative;
 }
 
+/* Four cards fit exactly (three 16px gaps); arrows and scrolling engage
+   only on overflow — the nav measures scrollWidth and hides otherwise.
+   safe center keeps short rows centred without the old zero-width
+   pseudo-item trick, whose extra gaps broke the exact fit. */
 .ssc-carousel-track {
     display: flex;
+    justify-content: safe center;
     gap: 16px;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
@@ -20,28 +25,25 @@
     }
 
     > * {
-        flex: 0 0 280px;
-        max-width: 280px;
+        flex: 0 0 calc((100% - 48px) / 4);
+        max-width: none;
         scroll-snap-align: start;
+    }
+
+    @media (max-width: bp.$bp-desktop) {
+        > * {
+            flex-basis: calc((100% - 32px) / 3);
+        }
+    }
+
+    @media (max-width: bp.$bp-sm) {
+        > * {
+            flex-basis: 100%;
+        }
     }
 
     .listing_wrapper {
         width: 280px;
-    }
-}
-
-/* A row with fewer cards than fit per view (five destinations, say) used to
-   sit hard against the left edge with the remainder of the track empty, which
-   read as a broken left-aligned grid. Auto margins on zero-width flex
-   pseudo-items absorb that leftover space and centre the row; when the cards
-   overflow the track the margins collapse to zero, so scrolling and the
-   carousel arrows (which measure scrollWidth) behave exactly as before. */
-.ssc-tablets.ssc-carousel-track {
-    &::before,
-    &::after {
-        content: '';
-        margin-left: auto;
-        margin-right: auto;
     }
 }
 

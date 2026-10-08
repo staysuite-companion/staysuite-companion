@@ -1,5 +1,7 @@
 /* ---------- Term tablets ---------- */
 
+@use '../breakpoints' as bp;
+
 .ssc-tablets {
     display: flex;
     flex-wrap: wrap;
@@ -7,11 +9,11 @@
     gap: 12px;
 }
 
-/* Tablets as a one-line snap carousel: six fit, the rest scroll with
-   gallery arrows (auto-hidden when everything fits). */
+/* Tablets as a one-line snap carousel: six fit exactly (five 12px gaps),
+   arrows appear only when a seventh overflows (auto-hidden otherwise). */
 .ssc-tablets.ssc-carousel-track {
     flex-wrap: nowrap;
-    justify-content: flex-start;
+    justify-content: safe center;
     gap: 12px;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
@@ -24,10 +26,22 @@
     }
 
     > * {
-        flex: 0 0 calc((100% - 64px) / 6);
+        flex: 0 0 calc((100% - 60px) / 6);
         max-width: none;
         min-width: 160px;
         scroll-snap-align: start;
+    }
+
+    @media (max-width: bp.$bp-desktop) {
+        > * {
+            flex-basis: calc((100% - 36px) / 4);
+        }
+    }
+
+    @media (max-width: bp.$bp-sm) {
+        > * {
+            flex-basis: calc((100% - 12px) / 2);
+        }
     }
 }
 
