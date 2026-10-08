@@ -55,13 +55,27 @@
     display: flex;
     justify-content: space-between;
     pointer-events: none;
+    z-index: 5;
 }
 
 @media (max-width: bp.$bp-md) {
-    /* No room outside the track on phones — overlay the edges. */
+    /* No room outside the track on phones — overlay the edges. White
+       glyphs wash out on bright photos, so buttons get a dark chip. */
     .ssc-carousel-nav {
         left: 0;
         right: 0;
+    }
+
+    .ssc-carousel-prev,
+    .ssc-carousel-next {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.5);
+        color: #fff;
+        font-size: 28px;
+        line-height: 44px;
+        text-shadow: none;
     }
 }
 

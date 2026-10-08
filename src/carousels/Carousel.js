@@ -3,9 +3,9 @@
  *
  * Mounted into existing markup by src/index.js — the track and its
  * cards are plain HTML, so rows work with and without JavaScript.
- * Controls hide themselves when everything already fits (e.g. a
- * single item), which also covers post-load font/image shifts via a
- * delayed re-check.
+ * Controls show only when the track actually overflows; a
+ * ResizeObserver re-checks after late image loads, font shifts and
+ * orientation changes, with resize + load fallbacks.
  */
 import { useEffect, useState } from 'react';
 import { __ } from '@wordpress/i18n';
@@ -22,10 +22,20 @@ export default function CarouselNav({ track }) {
         };
         check();
         window.addEventListener('resize', check);
+        window.addEventListener('load', check);
         const settled = setTimeout(check, 600);
+        let observer;
+        if (typeof ResizeObserver !== 'undefined') {
+            observer = new ResizeObserver(check);
+            observer.observe(track);
+        }
         return () => {
             window.removeEventListener('resize', check);
+            window.removeEventListener('load', check);
             clearTimeout(settled);
+            if (observer) {
+                observer.disconnect();
+            }
         };
     }, [track]);
 
