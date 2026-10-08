@@ -42,6 +42,12 @@ class InvoiceEmail {
             return $args;
         }
 
+        // StaySuite document shells (confirmation receipts) brand
+        // themselves; wrapping them again would nest shells.
+        if ( strpos( (string) $args['message'], '<!--ssc-doc-->' ) !== false ) {
+            return $args;
+        }
+
         if ( stripos( (string) $args['subject'], 'invoice' ) === false && stripos( (string) $args['message'], 'invoice' ) === false ) {
             return $args;
         }

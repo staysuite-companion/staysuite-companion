@@ -213,6 +213,28 @@ function SettingsTab() {
                     <option value="required">{__('Signup required', 'staysuite-companion')}</option>
                 </select>
             </Row>
+            <h2>{__('Documents', 'staysuite-companion')}</h2>
+            <Row
+                label={__('Confirmation receipts', 'staysuite-companion')}
+                hint={__('Emails an Agoda-style receipt to the guest when a theme booking or group request turns confirmed. Preview and manual resend ship in Pro.', 'staysuite-companion')}
+            >
+                <Check
+                    label={__('Send confirmation receipt automatically', 'staysuite-companion')}
+                    checked={settings.confirmation_auto}
+                    onChange={set('confirmation_auto')}
+                />
+            </Row>
+            <Row
+                label={__('Receipt notes', 'staysuite-companion')}
+                hint={__('Check-in notes printed on every receipt (photo ID, extra charges, no-show policy).', 'staysuite-companion')}
+            >
+                <textarea
+                    rows="4"
+                    value={settings.confirmation_notes || ''}
+                    onChange={(e) => set('confirmation_notes')(e.target.value)}
+                    style={{ width: '100%', maxWidth: '480px' }}
+                />
+            </Row>
             <h2>{__('Search colors', 'staysuite-companion')}</h2>
             <Row label={__('Color source', 'staysuite-companion')}>
                 <label style={{ display: 'block', marginBottom: '8px' }}>

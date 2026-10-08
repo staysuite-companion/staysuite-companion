@@ -70,6 +70,7 @@ return array(
     'StaySuite\\Companion\\Blocks\\PreviewEndpoint' => $baseDir . '/includes/Blocks/PreviewEndpoint.php',
     'StaySuite\\Companion\\Blocks\\Registry' => $baseDir . '/includes/Blocks/Registry.php',
     'StaySuite\\Companion\\Blocks\\Renderer' => $baseDir . '/includes/Blocks/Renderer.php',
+    'StaySuite\\Companion\\Booking\\Documents' => $baseDir . '/includes/Booking/Documents.php',
     'StaySuite\\Companion\\Booking\\QuoteAjax' => $baseDir . '/includes/Booking/QuoteAjax.php',
     'StaySuite\\Companion\\Booking\\QuoteForm' => $baseDir . '/includes/Booking/QuoteForm.php',
     'StaySuite\\Companion\\Booking\\RequestCPT' => $baseDir . '/includes/Booking/RequestCPT.php',

@@ -11,6 +11,12 @@
 | `ssc_group_selection_enabled` (`$enabled`) | filter | Group-quote room selection availability (Pro Add to quote buttons); setting default |
 | `ssc_signup_genders` (`$genders`) | filter | Signup gender options (slug => label); validated against slugs on save |
 | `ssc_signup_phone_error` / `ssc_signup_gender_error` (`$message`) | filter | Required-field rejection text on theme signup forms |
+| `ssc_confirmation_subject` (`$subject`, `$booking_id`) | filter | Theme-booking receipt subject |
+| `ssc_request_confirmation_subject` (`$subject`, `$request_id`) | filter | Group-request receipt subject |
+| `ssc_confirmation_html` (`$html`, `$booking_id`) | filter | Theme-booking receipt body (Pro: preview, branding) |
+| `ssc_request_confirmation_html` (`$html`, `$request_id`) | filter | Group-request receipt body |
+| `ssc_confirmation_sent` / `ssc_request_confirmation_sent` (`$id`, `$email`) | action | After a receipt is mailed (Pro: logging, reminders) |
+| `ssc_confirmation_notes` (`$notes`, `$ref_id`, `$kind`) | filter | Receipt notes text (Pro: per-hotel override; kind is booking\|request) |
 | `ssc_hotel_search_settings` / `ssc_hero_search_settings` (`$settings`) | filter | Widget field composition |
 | `ssc_search_vars` (`$css`, `$submit`) | filter | Override search-bar color mapping |
 | `ssc_single_hotel_template` (`$path`) | filter | Override the hotel template file |

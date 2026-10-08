@@ -85,6 +85,7 @@ class ComposerStaticInit68a864c75adfc4ceb5411937eed979bf
         'StaySuite\\Companion\\Blocks\\PreviewEndpoint' => __DIR__ . '/../..' . '/includes/Blocks/PreviewEndpoint.php',
         'StaySuite\\Companion\\Blocks\\Registry' => __DIR__ . '/../..' . '/includes/Blocks/Registry.php',
         'StaySuite\\Companion\\Blocks\\Renderer' => __DIR__ . '/../..' . '/includes/Blocks/Renderer.php',
+        'StaySuite\\Companion\\Booking\\Documents' => __DIR__ . '/../..' . '/includes/Booking/Documents.php',
         'StaySuite\\Companion\\Booking\\QuoteAjax' => __DIR__ . '/../..' . '/includes/Booking/QuoteAjax.php',
         'StaySuite\\Companion\\Booking\\QuoteForm' => __DIR__ . '/../..' . '/includes/Booking/QuoteForm.php',
         'StaySuite\\Companion\\Booking\\RequestCPT' => __DIR__ . '/../..' . '/includes/Booking/RequestCPT.php',

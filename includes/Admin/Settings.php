@@ -68,6 +68,8 @@ class Settings {
             'invoice_brand'       => 'logo_name',
             'signup_phone'        => 'required',
             'signup_gender'       => 'profile',
+            'confirmation_auto'   => 1,
+            'confirmation_notes'  => '',
         );
     }
 
@@ -90,6 +92,8 @@ class Settings {
         $all['invoice_brand'] = in_array( $all['invoice_brand'], array( 'logo_name', 'logo', 'name' ), true ) ? $all['invoice_brand'] : 'logo_name';
         $all['signup_phone'] = self::mode_or_default( $all['signup_phone'] ?? '', 'required', array( 'off', 'optional', 'required' ) );
         $all['signup_gender'] = self::mode_or_default( $all['signup_gender'] ?? '', 'profile', array( 'off', 'profile', 'optional', 'required' ) );
+        $all['confirmation_auto'] = ! empty( $all['confirmation_auto'] ) ? 1 : 0;
+        $all['confirmation_notes'] = isset( $all['confirmation_notes'] ) ? sanitize_textarea_field( $all['confirmation_notes'] ) : '';
         if ( $key === null ) {
             return $all;
         }
@@ -135,6 +139,8 @@ class Settings {
             'invoice_brand'    => ( isset( $raw['invoice_brand'] ) && in_array( $raw['invoice_brand'], array( 'logo_name', 'logo', 'name' ), true ) ) ? $raw['invoice_brand'] : 'logo_name',
             'signup_phone'     => self::mode_or_default( $raw['signup_phone'] ?? '', 'required', array( 'off', 'optional', 'required' ) ),
             'signup_gender'    => self::mode_or_default( $raw['signup_gender'] ?? '', 'profile', array( 'off', 'profile', 'optional', 'required' ) ),
+            'confirmation_auto' => ! empty( $raw['confirmation_auto'] ) ? 1 : 0,
+            'confirmation_notes' => isset( $raw['confirmation_notes'] ) ? sanitize_textarea_field( $raw['confirmation_notes'] ) : '',
         );
     }
 

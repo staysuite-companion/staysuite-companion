@@ -299,7 +299,9 @@ final class Plugin {
         $this->container['quote_form']       = new Booking\QuoteForm();
         $this->container['quote_ajax']       = new Booking\QuoteAjax();
 
-        $this->container['signup']            = new Signup();
+        $this->container['signup'] = new Signup();
+
+        $this->container['documents']         = new Booking\Documents();
         $this->container['invoice_email']    = new Frontend\InvoiceEmail();
 
         if ( is_admin() ) {
