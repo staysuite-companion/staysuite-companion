@@ -47,6 +47,9 @@ export default function SearchMode({ wrapper }) {
         }
         const node = document.createElement('div');
         node.className = 'ssc-mode-form-outside';
+        if (hero && hero.getAttribute('data-ssc-animate') === '0') {
+            node.classList.add('ssc-no-animations');
+        }
         if (hero && hero.nextSibling) {
             host.insertBefore(node, hero.nextSibling);
         } else {

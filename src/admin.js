@@ -135,15 +135,8 @@ function SettingsTab() {
     return (
         <div className="ssc-tab-panel">
             <h2>{__('Settings', 'staysuite-companion')}</h2>
-            <Row label={__('Individual / Group capsule', 'staysuite-companion')}>
-                <Check
-                    label={__('Show the capsule above the homepage search', 'staysuite-companion')}
-                    checked={settings.capsule}
-                    onChange={set('capsule')}
-                />
-            </Row>
             <Row
-                label={__('Default adults', 'staysuite-companion')}
+                label={__('Default Guest Number', 'staysuite-companion')}
                 hint={__('Preselected in every Guests panel. 0 disables.', 'staysuite-companion')}
             >
                 <input
@@ -154,29 +147,6 @@ function SettingsTab() {
                     onChange={(e) => set('default_adults')(parseInt(e.target.value || '0', 10))}
                     style={{ width: '80px' }}
                 />
-            </Row>
-            <Row label={__('Homepage sections', 'staysuite-companion')}>
-                <Check
-                    label={__('Hairline dividers between sections', 'staysuite-companion')}
-                    checked={settings.dividers}
-                    onChange={set('dividers')}
-                />
-                <Check
-                    label={__('Group form pop-out animation', 'staysuite-companion')}
-                    checked={settings.animations}
-                    onChange={set('animations')}
-                />
-            </Row>
-            <Row label={__('Hero cover height', 'staysuite-companion')}>
-                <input
-                    type="number"
-                    min="30"
-                    max="100"
-                    value={settings.hero_height}
-                    onChange={(e) => set('hero_height')(parseInt(e.target.value || '75', 10))}
-                    style={{ width: '80px' }}
-                />{' '}
-                <span>vh</span>
             </Row>
             <h2>{__('Search', 'staysuite-companion')}</h2>
             <Row

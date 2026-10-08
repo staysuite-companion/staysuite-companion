@@ -6,7 +6,7 @@
 * [Homepage blocks & shortcodes](homepage-blocks.md) — all five blocks, attributes, shortcode reference
 * [Group booking](group-booking.md) — Individual/Group capsule, quote flow, managing requests
 * [Customization](customization.md) — theme color tracking, CSS variables, body classes
-* [Settings](settings.md) — every toggle: capsule, adults, dividers, animations, hero height, colors
+* [Settings](settings.md) — every toggle: guest number, colors, search, quotes
 * [Hooks & data](hooks.md) — actions, REST, AJAX, meta keys, options (extension points)
 * [Pro architecture](pro.md) — gates, licensing, updates, data rules for the premium addon
 * [Release export](release.md) — building the minimal zip, release/tag commands, wp.org SVN

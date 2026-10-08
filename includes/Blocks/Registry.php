@@ -101,15 +101,19 @@ class Registry {
             'ssc/term-tablets', array(
 				'editor_script'   => 'ssc-editor',
 				'attributes'      => array(
-					'taxonomy'   => array(
+					'taxonomy'     => array(
 						'type' => 'string',
 						'default' => 'property_city',
 					),
-					'number'     => array(
+					'number'       => array(
 						'type' => 'number',
 						'default' => 6,
 					),
-					'hide_empty' => array(
+					'hide_empty'   => array(
+						'type' => 'boolean',
+						'default' => true,
+					),
+					'show_divider' => array(
 						'type' => 'boolean',
 						'default' => true,
 					),
@@ -158,6 +162,10 @@ class Registry {
 						'type' => 'string',
 						'default' => 'featured',
 					),
+					'show_divider'  => array(
+						'type' => 'boolean',
+						'default' => true,
+					),
 				),
 				'render_callback' => array( Renderer::class, 'render_listing_carousel' ),
 				'supports'        => array( 'align' => array( 'full', 'wide' ) ),
@@ -167,25 +175,37 @@ class Registry {
             'ssc/hero-search', array(
 				'editor_script'   => 'ssc-editor',
 				'attributes'      => array(
-					'title'       => array(
+					'title'        => array(
 						'type' => 'string',
 						'default' => '',
 					),
-					'subtitle'    => array(
+					'subtitle'     => array(
 						'type' => 'string',
 						'default' => '',
 					),
-					'image_id'    => array(
+					'image_id'     => array(
 						'type' => 'number',
 						'default' => 0,
 					),
-					'show_search' => array(
+					'show_search'  => array(
 						'type' => 'boolean',
 						'default' => true,
 					),
-					'search_mode' => array(
+					'search_mode'  => array(
 						'type' => 'string',
 						'default' => 'theme',
+					),
+					'hero_height'  => array(
+						'type' => 'number',
+						'default' => 75,
+					),
+					'show_capsule' => array(
+						'type' => 'boolean',
+						'default' => true,
+					),
+					'animate_form' => array(
+						'type' => 'boolean',
+						'default' => true,
 					),
 				),
 				'supports'        => array( 'align' => array( 'full', 'wide' ) ),
@@ -222,15 +242,17 @@ class Registry {
 				'taxonomy' => 'property_city',
 				'number' => 6,
 				'hide_empty' => '1',
+				'show_divider' => '1',
             ),
             $atts,
             'ssc_term_tablets'
         );
         return Renderer::render_term_tablets(
             array(
-				'taxonomy'   => $atts['taxonomy'],
-				'number'     => $atts['number'],
-				'hide_empty' => $atts['hide_empty'] === '1',
+				'taxonomy'     => $atts['taxonomy'],
+				'number'       => $atts['number'],
+				'hide_empty'   => $atts['hide_empty'] === '1',
+				'show_divider' => $atts['show_divider'] === '1',
             )
         );
     }
@@ -253,6 +275,7 @@ class Registry {
 				'featured_only' => '0',
 				'include_ids' => '',
 				'order' => 'featured',
+				'show_divider' => '1',
             ),
             $atts,
             'ssc_listing_carousel'
@@ -268,12 +291,13 @@ class Registry {
 				'featured_only' => $atts['featured_only'] === '1',
 				'include_ids'   => $atts['include_ids'],
 				'order'         => $atts['order'],
+				'show_divider'  => $atts['show_divider'] === '1',
             )
         );
     }
 
     /**
-     * Shortcode: [ssc_hero title subtitle image_id search_mode theme|simple|none].
+     * Shortcode: [ssc_hero title subtitle image_id search_mode theme|simple|none hero_height show_capsule animate_form].
      *
      * @param array<string,string>|string $atts Shortcode attributes.
      * @return string Hero HTML.
@@ -286,17 +310,23 @@ class Registry {
 				'image_id' => 0,
 				'search_mode' => 'theme',
 				'show_search' => '1',
+				'hero_height' => 75,
+				'show_capsule' => '1',
+				'animate_form' => '1',
             ),
             $atts,
             'ssc_hero'
         );
         return Renderer::render_hero(
             array(
-				'title'       => $atts['title'],
-				'subtitle'    => $atts['subtitle'],
-				'image_id'    => $atts['image_id'],
-				'search_mode' => $atts['search_mode'],
-				'show_search' => $atts['show_search'] === '1',
+				'title'        => $atts['title'],
+				'subtitle'     => $atts['subtitle'],
+				'image_id'     => $atts['image_id'],
+				'search_mode'  => $atts['search_mode'],
+				'show_search'  => $atts['show_search'] === '1',
+				'hero_height'  => $atts['hero_height'],
+				'show_capsule' => $atts['show_capsule'] === '1',
+				'animate_form' => $atts['animate_form'] === '1',
             )
         );
     }

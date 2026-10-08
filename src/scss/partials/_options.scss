@@ -1,17 +1,7 @@
-/* Opt-outs from Settings: dividers and animations. */
-body.ssc-no-dividers.ssc-homepage {
-    .ssc-tablets,
-    .ssc-row,
-    .ssc-features,
-    .ssc-payments {
-        border-bottom: 0 !important;
-        padding-bottom: 0 !important;
-    }
-}
-
-body.ssc-no-animations {
-    .ssc-mode-form-outside,
-    .ssc-mode-form-outside .ssc-mode-form {
-        transition: none !important;
-    }
+/* Per-cover opt-out: the hero block's animate_form attribute adds
+   .ssc-no-animations to the group-form portal node it spawns, killing the
+   pop-out transition for visitors who prefer instant feedback. */
+.ssc-mode-form-outside.ssc-no-animations,
+.ssc-mode-form-outside.ssc-no-animations .ssc-mode-form {
+    transition: none !important;
 }

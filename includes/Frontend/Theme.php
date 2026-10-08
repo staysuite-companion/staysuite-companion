@@ -106,16 +106,18 @@ class Theme {
     /**
      * Build the :root CSS variable declaration.
      *
+     * Cover height is a per-cover block attribute (inline --ssc-hero-h on
+     * the hero section), not a global, so it is not declared here.
+     *
      * @return string CSS custom properties.
      */
     public static function inline_vars() {
         return sprintf(
-            ':root{--ssc-accent:%s;--ssc-accent-hover:%s;--ssc-text:%s;--ssc-headings:%s;--ssc-hero-h:%dvh;%s}',
+            ':root{--ssc-accent:%s;--ssc-accent-hover:%s;--ssc-text:%s;--ssc-headings:%s;%s}',
             esc_html( self::accent() ),
             esc_html( self::accent_hover() ),
             esc_html( self::text() ),
             esc_html( self::headings() ),
-            intval( Settings::get( 'hero_height' ) ),
             self::search_vars()
         );
     }

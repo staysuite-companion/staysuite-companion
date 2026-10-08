@@ -57,11 +57,7 @@ class Settings {
      */
     public static function defaults() {
         return array(
-            'capsule'             => 1,
             'default_adults'      => 2,
-            'dividers'            => 1,
-            'animations'          => 1,
-            'hero_height'         => 75,
             'color_mode'          => 'theme',
             'color_submit'        => '#137699',
             'color_hover'         => '#022947',
@@ -81,11 +77,7 @@ class Settings {
      */
     public static function get( $key = null ) {
         $all = wp_parse_args( (array) get_option( self::OPTION, array() ), self::defaults() );
-        $all['capsule'] = ! empty( $all['capsule'] ) ? 1 : 0;
-        $all['dividers'] = ! empty( $all['dividers'] ) ? 1 : 0;
-        $all['animations'] = ! empty( $all['animations'] ) ? 1 : 0;
         $all['default_adults'] = min( 6, max( 0, intval( $all['default_adults'] ) ) );
-        $all['hero_height'] = min( 100, max( 30, intval( $all['hero_height'] ) ) );
         $all['color_mode'] = ( $all['color_mode'] === 'custom' ) ? 'custom' : 'theme';
         $all['color_submit'] = self::hex_or_default( $all['color_submit'], '#137699' );
         $all['color_hover']  = self::hex_or_default( $all['color_hover'], '#022947' );
@@ -128,11 +120,7 @@ class Settings {
             $raw = array();
         }
         return array(
-            'capsule'        => ! empty( $raw['capsule'] ) ? 1 : 0,
             'default_adults' => isset( $raw['default_adults'] ) ? min( 6, max( 0, intval( $raw['default_adults'] ) ) ) : 2,
-            'dividers'       => ! empty( $raw['dividers'] ) ? 1 : 0,
-            'animations'     => ! empty( $raw['animations'] ) ? 1 : 0,
-            'hero_height'    => isset( $raw['hero_height'] ) ? min( 100, max( 30, intval( $raw['hero_height'] ) ) ) : 75,
             'color_mode'     => ( isset( $raw['color_mode'] ) && $raw['color_mode'] === 'custom' ) ? 'custom' : 'theme',
             'color_submit'   => self::hex_or_default( $raw['color_submit'] ?? '', '#137699' ),
             'color_hover'    => self::hex_or_default( $raw['color_hover'] ?? '', '#022947' ),
@@ -151,7 +139,6 @@ class Settings {
         add_action( 'admin_menu', array( $this, 'menu' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'admin_assets' ) );
         add_action( 'rest_api_init', array( $this, 'rest_routes' ) );
-        add_filter( 'body_class', array( $this, 'body_classes' ) );
         add_filter( 'submenu_file', array( $this, 'highlight_tab' ), 10, 2 );
     }
 
@@ -391,24 +378,5 @@ class Settings {
         }
         update_option( self::OPTION, self::sanitize( $raw ) );
         return new WP_REST_Response( array( 'settings' => self::get() ), 200 );
-    }
-
-    /**
-     * Flag disabled behaviors for CSS/JS.
-     *
-     * @param string[] $classes Body classes.
-     * @return string[] Classes with flags added.
-     */
-    public function body_classes( $classes ) {
-        if ( is_admin() ) {
-            return $classes;
-        }
-        if ( ! self::get( 'dividers' ) ) {
-            $classes[] = 'ssc-no-dividers';
-        }
-        if ( ! self::get( 'animations' ) ) {
-            $classes[] = 'ssc-no-animations';
-        }
-        return $classes;
     }
 }

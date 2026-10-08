@@ -33,10 +33,12 @@ body:not(.ssc-homepage) .ssc-payments,
 
 /* Hairline divider after each homepage section (hero excluded; the
    payment strip sits against the tinted footer, so it gets air, not a
-   divider). */
+   divider). Row blocks opt out per-block via show_divider, which renders
+   .ssc-no-divider; the features group is a core block and always keeps
+   its divider. */
 body.ssc-homepage {
-    .ssc-tablets,
-    .ssc-row,
+    .ssc-tablets:not(.ssc-no-divider),
+    .ssc-row:not(.ssc-no-divider),
     .ssc-features {
         border-bottom: 1px solid #e8ebee;
         padding-bottom: 28px;

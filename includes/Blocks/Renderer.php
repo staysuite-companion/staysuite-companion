@@ -62,7 +62,7 @@ class Renderer {
         if ( is_wp_error( $terms ) || empty( $terms ) ) {
             return '';
         }
-        $html = '<div class="ssc-carousel-root ssc-tablets-root" data-ssc-carousel><div class="ssc-tablets ssc-carousel-track' . self::align_class( $atts ) . '">';
+        $html = '<div class="ssc-carousel-root ssc-tablets-root" data-ssc-carousel><div class="ssc-tablets ssc-carousel-track' . self::align_class( $atts ) . ( $atts['show_divider'] ? '' : ' ssc-no-divider' ) . '">';
         foreach ( $terms as $term ) {
             $html .= self::render_tablet( $term );
         }
@@ -90,7 +90,7 @@ class Renderer {
      * Normalize tablets attributes.
      *
      * @param array<string,mixed> $atts Raw attributes.
-     * @return array{taxonomy:string,number:int,hide_empty:bool} Normalized attributes.
+     * @return array{taxonomy:string,number:int,hide_empty:bool,show_divider:bool} Normalized attributes.
      */
     private static function normalize_tablets_atts( $atts ) {
         $taxonomy = isset( $atts['taxonomy'] ) ? sanitize_key( $atts['taxonomy'] ) : 'property_city';
@@ -98,9 +98,10 @@ class Renderer {
             $taxonomy = 'property_city';
         }
         return array(
-            'taxonomy'   => $taxonomy,
-            'number'     => isset( $atts['number'] ) ? max( 1, min( 24, intval( $atts['number'] ) ) ) : 6,
-            'hide_empty' => ! isset( $atts['hide_empty'] ) || (bool) $atts['hide_empty'],
+            'taxonomy'     => $taxonomy,
+            'number'       => isset( $atts['number'] ) ? max( 1, min( 24, intval( $atts['number'] ) ) ) : 6,
+            'hide_empty'   => ! isset( $atts['hide_empty'] ) || (bool) $atts['hide_empty'],
+            'show_divider' => ! isset( $atts['show_divider'] ) || (bool) $atts['show_divider'],
         );
     }
 
@@ -168,7 +169,7 @@ class Renderer {
         if ( $items_html === '' ) {
             return '';
         }
-        $html = '<section class="ssc-row' . self::align_class( $atts ) . '">';
+        $html = '<section class="ssc-row' . self::align_class( $atts ) . ( $atts['show_divider'] ? '' : ' ssc-no-divider' ) . '">';
         if ( $atts['title'] !== '' ) {
             $html .= '<h2 class="ssc-row-title">' . esc_html( $atts['title'] ) . '</h2>';
         }
@@ -181,7 +182,7 @@ class Renderer {
      * Normalize carousel attributes.
      *
      * @param array<string,mixed> $atts Raw attributes.
-     * @return array{title:string,source:string,taxonomy:string,term:string,city:string,count:int,featured_only:bool,include_ids:int[],order:string} Normalized attributes.
+     * @return array{title:string,source:string,taxonomy:string,term:string,city:string,count:int,featured_only:bool,include_ids:int[],order:string,show_divider:bool} Normalized attributes.
      */
     private static function normalize_carousel_atts( $atts ) {
         $source = isset( $atts['source'] ) && $atts['source'] === 'hotels' ? 'hotels' : 'rooms';
@@ -213,6 +214,7 @@ class Renderer {
             'featured_only' => ! empty( $atts['featured_only'] ),
             'include_ids'   => $include_ids,
             'order'         => $order,
+            'show_divider'  => ! isset( $atts['show_divider'] ) || (bool) $atts['show_divider'],
         );
     }
 
@@ -729,6 +731,10 @@ class Renderer {
      * Individual/Group pill and all theme behavior apply), simple (the
      * plugin's plain GET form), or none.
      *
+     * Cover height, capsule visibility and the group-form animation are
+     * per-cover block attributes — owners tune each cover in the editor
+     * instead of a global setting.
+     *
      * The cover falls back to the page's featured image when the block has no
      * image_id. Content is copied between databases (dev to staging, demo to
      * production) and attachment IDs do not travel with it, so a stored
@@ -750,20 +756,24 @@ class Renderer {
         if ( isset( $atts['show_search'] ) && ! (bool) $atts['show_search'] ) {
             $mode = 'none';
         }
+        $height = isset( $atts['hero_height'] ) ? min( 100, max( 30, intval( $atts['hero_height'] ) ) ) : 75;
+        $capsule = ! isset( $atts['show_capsule'] ) || (bool) $atts['show_capsule'];
+        $animate = ! isset( $atts['animate_form'] ) || (bool) $atts['animate_form'];
         $align = self::align_class( $atts );
 
         if ( $image_id <= 0 ) {
             $image_id = self::hero_fallback_image( $atts );
         }
 
-        $style = '';
+        $styles = array( '--ssc-hero-h:' . $height . 'vh' );
         if ( $image_id > 0 ) {
             $src = wp_get_attachment_image_src( $image_id, 'full' );
             if ( is_array( $src ) ) {
-                $style = ' style="background-image:url(' . esc_url( $src[0] ) . ')"';
+                $styles[] = 'background-image:url(' . esc_url( $src[0] ) . ')';
             }
         }
-        $html = '<section class="ssc-hero' . $align . '"' . $style . '><div class="ssc-hero-inner">';
+        $style = ' style="' . esc_attr( implode( ';', $styles ) ) . '"';
+        $html = '<section class="ssc-hero' . $align . '"' . $style . ' data-ssc-capsule="' . ( $capsule ? '1' : '0' ) . '" data-ssc-animate="' . ( $animate ? '1' : '0' ) . '"><div class="ssc-hero-inner">';
         if ( $title !== '' ) {
             $html .= '<h1 class="ssc-hero-title">' . esc_html( $title ) . '</h1>';
         }

@@ -312,9 +312,10 @@ class PreviewEndpoint {
      */
     private function coerce_tablets( $attributes ) {
         return array(
-            'taxonomy'   => isset( $attributes['taxonomy'] ) ? sanitize_key( $attributes['taxonomy'] ) : 'property_city',
-            'number'     => isset( $attributes['number'] ) ? intval( $attributes['number'] ) : 6,
-            'hide_empty' => ! empty( $attributes['hide_empty'] ),
+            'taxonomy'     => isset( $attributes['taxonomy'] ) ? sanitize_key( $attributes['taxonomy'] ) : 'property_city',
+            'number'       => isset( $attributes['number'] ) ? intval( $attributes['number'] ) : 6,
+            'hide_empty'   => ! empty( $attributes['hide_empty'] ),
+            'show_divider' => ! isset( $attributes['show_divider'] ) || ! empty( $attributes['show_divider'] ),
         );
     }
 
@@ -335,6 +336,7 @@ class PreviewEndpoint {
             'featured_only' => ! empty( $attributes['featured_only'] ),
             'include_ids'   => isset( $attributes['include_ids'] ) ? sanitize_text_field( $attributes['include_ids'] ) : '',
             'order'         => isset( $attributes['order'] ) ? sanitize_key( $attributes['order'] ) : 'featured',
+            'show_divider'  => ! isset( $attributes['show_divider'] ) || ! empty( $attributes['show_divider'] ),
         );
     }
 
@@ -346,11 +348,14 @@ class PreviewEndpoint {
      */
     private function coerce_hero( $attributes ) {
         return array(
-            'title'       => isset( $attributes['title'] ) ? sanitize_text_field( $attributes['title'] ) : '',
-            'subtitle'    => isset( $attributes['subtitle'] ) ? sanitize_text_field( $attributes['subtitle'] ) : '',
-            'image_id'    => isset( $attributes['image_id'] ) ? intval( $attributes['image_id'] ) : 0,
-            'show_search' => ! isset( $attributes['show_search'] ) || ! empty( $attributes['show_search'] ),
-            'search_mode' => isset( $attributes['search_mode'] ) ? sanitize_key( $attributes['search_mode'] ) : 'theme',
+            'title'        => isset( $attributes['title'] ) ? sanitize_text_field( $attributes['title'] ) : '',
+            'subtitle'     => isset( $attributes['subtitle'] ) ? sanitize_text_field( $attributes['subtitle'] ) : '',
+            'image_id'     => isset( $attributes['image_id'] ) ? intval( $attributes['image_id'] ) : 0,
+            'show_search'  => ! isset( $attributes['show_search'] ) || ! empty( $attributes['show_search'] ),
+            'search_mode'  => isset( $attributes['search_mode'] ) ? sanitize_key( $attributes['search_mode'] ) : 'theme',
+            'hero_height'  => isset( $attributes['hero_height'] ) ? intval( $attributes['hero_height'] ) : 75,
+            'show_capsule' => ! isset( $attributes['show_capsule'] ) || ! empty( $attributes['show_capsule'] ),
+            'animate_form' => ! isset( $attributes['animate_form'] ) || ! empty( $attributes['animate_form'] ),
         );
     }
     /**

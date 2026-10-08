@@ -216,6 +216,8 @@ function defaultGuestCounts() {
  * Homepage only (body.ssc-homepage): everywhere else the theme search
  * stays exactly as is. Works with the Elementor widget and theme
  * templates alike because it keys off the shared search markup.
+ * Visibility is per-cover: a hero block with show_capsule off carries
+ * data-ssc-capsule="0" and its search bar gets no capsule.
  *
  * @return {void}
  */
@@ -223,18 +225,15 @@ function mountSearchModes() {
     if (typeof sscBooking === 'undefined') {
         return;
     }
-    var capsule = '1';
-    if (typeof sscSettings !== 'undefined' && typeof sscSettings.capsule !== 'undefined') {
-        capsule = String(sscSettings.capsule);
-    }
-    if (capsule === '0' || capsule === '') {
-        return;
-    }
     if (!document.body.classList.contains('ssc-homepage')) {
         return;
     }
     document.querySelectorAll('.advanced_search_form_wrapper, .search_wr_elementor').forEach((wrapper) => {
         if (wrapper.previousElementSibling && wrapper.previousElementSibling.hasAttribute('data-ssc-mode')) {
+            return;
+        }
+        const hero = wrapper.closest('.ssc-hero');
+        if (hero && hero.getAttribute('data-ssc-capsule') === '0') {
             return;
         }
         // The theme header search is suppressed on hero pages (see

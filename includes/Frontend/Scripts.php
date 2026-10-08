@@ -86,8 +86,7 @@ class Scripts {
         );
         wp_localize_script(
             self::APP_HANDLE, 'sscSettings', array(
-				'capsule' => (int) Settings::get( 'capsule' ),
-				'adults'  => (int) Settings::get( 'default_adults' ),
+				'adults' => (int) Settings::get( 'default_adults' ),
             )
         );
     }

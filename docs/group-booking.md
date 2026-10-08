@@ -2,10 +2,10 @@
 
 ## Individual / Group capsule
 
-On the StaySuite Homepage template only, a capsule toggle mounts above the homepage search bar. Other pages keep the native search untouched.
+On the StaySuite Homepage template only, a capsule toggle mounts above the homepage search bar — per cover, via the hero block's **Show Individual / Group capsule** toggle. Other pages keep the native search untouched, as does a cover with the capsule switched off.
 
 * **Individual** — the theme search behaves normally.
-* **Group** — the theme search stays visible (only its Search button is hidden and routed into the flow); a trip form portals below the search (overlapping the cover edge, cover height fixed) with a smooth expand animation, and the page scrolls the capsule just below the header.
+* **Group** — the theme search stays visible (only its Search button is hidden and routed into the flow); a trip form portals below the search (overlapping the cover edge, cover height fixed) with a smooth expand animation (per-cover **Group form pop-out animation** toggle), and the page scrolls the capsule just below the header.
 
 Next to a theme search bar the form reads location/dates/guests live from it; standalone (block/shortcode) it renders its own Where/dates/guests fields.
 
@@ -36,4 +36,4 @@ The request screen shows a **Selected rooms** row (`2 × Title`) with the **Esti
 ## Related
 
 * `[ssc_group_booking title="…"]` / `ssc/group-booking` block for standalone placement.
-* Guest panels default to 2 adults everywhere via the theme's own steppers.
+* Guest panels default to the Settings → Default Guest Number everywhere via the theme's own steppers.

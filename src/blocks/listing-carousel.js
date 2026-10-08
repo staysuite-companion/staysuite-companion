@@ -51,6 +51,7 @@ registerBlockType('ssc/listing-carousel', {
         featured_only: { type: 'boolean', default: false },
         include_ids: { type: 'string', default: '' },
         order: { type: 'string', default: 'featured' },
+        show_divider: { type: 'boolean', default: true },
     },
     edit({ attributes, setAttributes }) {
         const set = (key) => (value) => setAttributes({ [key]: value });
@@ -137,6 +138,11 @@ registerBlockType('ssc/listing-carousel', {
                                 />
                             </>
                         )}
+                        <ToggleControl
+                            label={__('Hairline divider below', 'staysuite-companion')}
+                            checked={attributes.show_divider}
+                            onChange={set('show_divider')}
+                        />
                     </PanelBody>
                     <ProUpsell features={[__('Discount badges + scheduled sales', 'staysuite-companion'), __('Sponsored ordering', 'staysuite-companion'), __('Multi-room Add buttons', 'staysuite-companion')]} />
                 </InspectorControls>

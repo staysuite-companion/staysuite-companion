@@ -23,6 +23,7 @@ registerBlockType('ssc/term-tablets', {
         taxonomy: { type: 'string', default: 'property_city' },
         number: { type: 'number', default: 6 },
         hide_empty: { type: 'boolean', default: true },
+        show_divider: { type: 'boolean', default: true },
     },
     edit({ attributes, setAttributes }) {
         return (
@@ -46,6 +47,11 @@ registerBlockType('ssc/term-tablets', {
                             label={__('Hide empty', 'staysuite-companion')}
                             checked={attributes.hide_empty}
                             onChange={(hide_empty) => setAttributes({ hide_empty })}
+                        />
+                        <ToggleControl
+                            label={__('Hairline divider below', 'staysuite-companion')}
+                            checked={attributes.show_divider}
+                            onChange={(show_divider) => setAttributes({ show_divider })}
                         />
                     </PanelBody>
                     <ProUpsell features={[__('Custom gradient palettes', 'staysuite-companion'), __('Sponsored tablet placement', 'staysuite-companion')]} />
