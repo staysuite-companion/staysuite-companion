@@ -9,12 +9,15 @@ import HotelBadge from './cards/HotelBadge';
 import CarouselNav from './carousels/Carousel';
 import BookingForm from './booking/BookingForm';
 import SearchMode from './search/SearchMode';
+import mountSignupFields, { mountProfileGender } from './signup/SignupFields';
 
 document.addEventListener('DOMContentLoaded', () => {
     mountHotelBadges();
     mountCarouselNavs();
     mountBookingForms();
     mountSearchModes();
+    mountSignupFields();
+    mountProfileGender();
     pruneHiddenHeaderSearch();
     mountHeroCalendars();
     mountHotelMaps();

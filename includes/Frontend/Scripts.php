@@ -8,6 +8,7 @@
 
 namespace StaySuite\Companion\Frontend;
 
+use StaySuite\Companion\Accounts\Signup;
 use StaySuite\Companion\Admin\Settings;
 use StaySuite\Companion\Booking\QuoteAjax;
 use StaySuite\Companion\Hotel\HotelCPT;
@@ -87,6 +88,14 @@ class Scripts {
         wp_localize_script(
             self::APP_HANDLE, 'sscSettings', array(
 				'adults' => (int) Settings::get( 'default_adults' ),
+            )
+        );
+        wp_localize_script(
+            self::APP_HANDLE, 'sscSignup', array(
+				'phone'        => Settings::get( 'signup_phone' ),
+				'gender'       => Settings::get( 'signup_gender' ),
+				'genders'      => Signup::genders(),
+				'gender_value' => Signup::gender_slug( get_current_user_id() ),
             )
         );
     }

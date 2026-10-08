@@ -9,6 +9,7 @@
 namespace StaySuite\Companion;
 
 use StaySuite\Companion\Admin\AssignPage;
+use StaySuite\Companion\Accounts\Signup;
 use StaySuite\Companion\Frontend\CardBadge;
 use StaySuite\Companion\Frontend\RoomSingleLink;
 use StaySuite\Companion\Frontend\Scripts;
@@ -297,6 +298,8 @@ final class Plugin {
         $this->container['group_request']    = new Booking\RequestCPT();
         $this->container['quote_form']       = new Booking\QuoteForm();
         $this->container['quote_ajax']       = new Booking\QuoteAjax();
+
+        $this->container['signup']            = new Signup();
         $this->container['invoice_email']    = new Frontend\InvoiceEmail();
 
         if ( is_admin() ) {

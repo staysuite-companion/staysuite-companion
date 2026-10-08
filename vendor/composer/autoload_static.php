@@ -75,6 +75,7 @@ class ComposerStaticInit68a864c75adfc4ceb5411937eed979bf
         'PHPCSUtils\\Utils\\TypeString' => __DIR__ . '/..' . '/phpcsstandards/phpcsutils/PHPCSUtils/Utils/TypeString.php',
         'PHPCSUtils\\Utils\\UseStatements' => __DIR__ . '/..' . '/phpcsstandards/phpcsutils/PHPCSUtils/Utils/UseStatements.php',
         'PHPCSUtils\\Utils\\Variables' => __DIR__ . '/..' . '/phpcsstandards/phpcsutils/PHPCSUtils/Utils/Variables.php',
+        'StaySuite\\Companion\\Accounts\\Signup' => __DIR__ . '/../..' . '/includes/Accounts/Signup.php',
         'StaySuite\\Companion\\Admin\\AssignPage' => __DIR__ . '/../..' . '/includes/Admin/AssignPage.php',
         'StaySuite\\Companion\\Admin\\HomepageSetup' => __DIR__ . '/../..' . '/includes/Admin/HomepageSetup.php',
         'StaySuite\\Companion\\Admin\\Settings' => __DIR__ . '/../..' . '/includes/Admin/Settings.php',

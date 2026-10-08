@@ -66,6 +66,8 @@ class Settings {
             'group_selection'     => 1,
             'contact_required'    => 'email',
             'invoice_brand'       => 'logo_name',
+            'signup_phone'        => 'required',
+            'signup_gender'       => 'profile',
         );
     }
 
@@ -86,6 +88,8 @@ class Settings {
         $all['group_selection'] = ! empty( $all['group_selection'] ) ? 1 : 0;
         $all['contact_required'] = in_array( $all['contact_required'], array( 'email', 'phone', 'both' ), true ) ? $all['contact_required'] : 'email';
         $all['invoice_brand'] = in_array( $all['invoice_brand'], array( 'logo_name', 'logo', 'name' ), true ) ? $all['invoice_brand'] : 'logo_name';
+        $all['signup_phone'] = self::mode_or_default( $all['signup_phone'] ?? '', 'required', array( 'off', 'optional', 'required' ) );
+        $all['signup_gender'] = self::mode_or_default( $all['signup_gender'] ?? '', 'profile', array( 'off', 'profile', 'optional', 'required' ) );
         if ( $key === null ) {
             return $all;
         }
@@ -129,7 +133,21 @@ class Settings {
             'group_selection' => ! empty( $raw['group_selection'] ) ? 1 : 0,
             'contact_required' => ( isset( $raw['contact_required'] ) && in_array( $raw['contact_required'], array( 'email', 'phone', 'both' ), true ) ) ? $raw['contact_required'] : 'email',
             'invoice_brand'    => ( isset( $raw['invoice_brand'] ) && in_array( $raw['invoice_brand'], array( 'logo_name', 'logo', 'name' ), true ) ) ? $raw['invoice_brand'] : 'logo_name',
+            'signup_phone'     => self::mode_or_default( $raw['signup_phone'] ?? '', 'required', array( 'off', 'optional', 'required' ) ),
+            'signup_gender'    => self::mode_or_default( $raw['signup_gender'] ?? '', 'profile', array( 'off', 'profile', 'optional', 'required' ) ),
         );
+    }
+
+    /**
+     * Normalize an off/optional/required-style mode with fallback.
+     *
+     * @param mixed    $value    Raw value.
+     * @param string   $fallback Fallback mode.
+     * @param string[] $allowed  Valid modes.
+     * @return string Valid mode.
+     */
+    private static function mode_or_default( $value, $fallback, $allowed ) {
+        return in_array( $value, $allowed, true ) ? $value : $fallback;
     }
 
     /**

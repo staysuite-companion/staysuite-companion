@@ -185,6 +185,34 @@ function SettingsTab() {
                     <option value="both">{__('Email and phone', 'staysuite-companion')}</option>
                 </select>
             </Row>
+            <h2>{__('Accounts', 'staysuite-companion')}</h2>
+            <Row
+                label={__('Signup phone', 'staysuite-companion')}
+                hint={__('Adds a phone field to every theme signup form and enforces it server-side. Stored in the theme’s own mobile field.', 'staysuite-companion')}
+            >
+                <select
+                    value={['off', 'optional', 'required'].includes(settings.signup_phone) ? settings.signup_phone : 'required'}
+                    onChange={(e) => set('signup_phone')(e.target.value)}
+                >
+                    <option value="off">{__('Off', 'staysuite-companion')}</option>
+                    <option value="optional">{__('Optional', 'staysuite-companion')}</option>
+                    <option value="required">{__('Required', 'staysuite-companion')}</option>
+                </select>
+            </Row>
+            <Row
+                label={__('Signup gender', 'staysuite-companion')}
+                hint={__('Male / Female / Other. Editable on the dashboard profile page unless Off. Required forces it onto the signup form and rejects empty signups.', 'staysuite-companion')}
+            >
+                <select
+                    value={['off', 'profile', 'optional', 'required'].includes(settings.signup_gender) ? settings.signup_gender : 'profile'}
+                    onChange={(e) => set('signup_gender')(e.target.value)}
+                >
+                    <option value="off">{__('Off', 'staysuite-companion')}</option>
+                    <option value="profile">{__('Profile only', 'staysuite-companion')}</option>
+                    <option value="optional">{__('Signup optional', 'staysuite-companion')}</option>
+                    <option value="required">{__('Signup required', 'staysuite-companion')}</option>
+                </select>
+            </Row>
             <h2>{__('Search colors', 'staysuite-companion')}</h2>
             <Row label={__('Color source', 'staysuite-companion')}>
                 <label style={{ display: 'block', marginBottom: '8px' }}>
@@ -219,13 +247,13 @@ function SettingsTab() {
             <h2>{__('Invoices', 'staysuite-companion')}</h2>
             <Row
                 label={__('Brand display', 'staysuite-companion')}
-                hint={__('Controls how the invoice header shows the hotel brand.', 'staysuite-companion')}
+                hint={__('Controls how the invoice header shows the platform branding.', 'staysuite-companion')}
             >
                 <select
                     value={['logo_name', 'logo', 'name'].includes(settings.invoice_brand) ? settings.invoice_brand : 'logo_name'}
                     onChange={(e) => set('invoice_brand')(e.target.value)}
                 >
-                    <option value="logo_name">{__('Logo and hotel name', 'staysuite-companion')}</option>
+                    <option value="logo_name">{__('Logo and platform name', 'staysuite-companion')}</option>
                     <option value="logo">{__('Logo only', 'staysuite-companion')}</option>
                     <option value="name">{__('Name only', 'staysuite-companion')}</option>
                 </select>

@@ -60,6 +60,7 @@ return array(
     'PHPCSUtils\\Utils\\TypeString' => $vendorDir . '/phpcsstandards/phpcsutils/PHPCSUtils/Utils/TypeString.php',
     'PHPCSUtils\\Utils\\UseStatements' => $vendorDir . '/phpcsstandards/phpcsutils/PHPCSUtils/Utils/UseStatements.php',
     'PHPCSUtils\\Utils\\Variables' => $vendorDir . '/phpcsstandards/phpcsutils/PHPCSUtils/Utils/Variables.php',
+    'StaySuite\\Companion\\Accounts\\Signup' => $baseDir . '/includes/Accounts/Signup.php',
     'StaySuite\\Companion\\Admin\\AssignPage' => $baseDir . '/includes/Admin/AssignPage.php',
     'StaySuite\\Companion\\Admin\\HomepageSetup' => $baseDir . '/includes/Admin/HomepageSetup.php',
     'StaySuite\\Companion\\Admin\\Settings' => $baseDir . '/includes/Admin/Settings.php',
