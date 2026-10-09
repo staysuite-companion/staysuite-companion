@@ -35,6 +35,19 @@ class Installer {
     const HOMEPAGE_OPTION = 'ssc_homepage_page_id';
 
     /**
+     * Option holding the last homepage creation failure timestamp.
+     *
+     * Set when automatic creation throws (usually a third-party
+     * save_post listener fatalling inside wp_insert_post, e.g.
+     * Elementor's strictly-typed template listener meeting a null
+     * post from another dispatcher). Admin retries hourly until the
+     * page exists; deleted on success.
+     *
+     * @var string
+     */
+    const HOMEPAGE_RETRY = 'ssc_homepage_retry';
+
+    /**
      * Title of the homepage page created on activation.
      *
      * @var string
@@ -75,12 +88,20 @@ class Installer {
      * already have one. Idempotent through the stored option plus a
      * title/template lookup, so reactivating never duplicates the page.
      *
+     * The insert runs inside third-party save_post listeners that this
+     * plugin does not control, so any throwable is caught, logged and
+     * flagged for an hourly admin retry: a hostile hook must never break
+     * activation. A throw after the row insert still leaves the page
+     * behind, and the title lookup below adopts it on retry instead of
+     * cloning it.
+     *
      * @return int Page ID, or 0 when creation failed.
      */
     public static function maybe_create_homepage_page() {
         $page_id = intval( get_option( self::HOMEPAGE_OPTION, 0 ) );
         if ( self::is_homepage_page( $page_id ) ) {
             self::apply_homepage_template( $page_id );
+            delete_option( self::HOMEPAGE_RETRY );
             return $page_id;
         }
 
@@ -88,29 +109,60 @@ class Installer {
         if ( $page_id > 0 ) {
             self::apply_homepage_template( $page_id );
             update_option( self::HOMEPAGE_OPTION, $page_id );
+            delete_option( self::HOMEPAGE_RETRY );
             return $page_id;
         }
 
-        $page_id = wp_insert_post(
-            array(
-                'post_title'   => self::HOMEPAGE_TITLE,
-                'post_name'    => sanitize_title( self::HOMEPAGE_TITLE ),
-                'post_content' => Patterns::homepage_content(),
-                'post_status'  => 'publish',
-                'post_type'    => 'page',
-            ),
-            true
-        );
+        try {
+            $page_id = wp_insert_post(
+                array(
+                    'post_title'   => self::HOMEPAGE_TITLE,
+                    'post_name'    => sanitize_title( self::HOMEPAGE_TITLE ),
+                    'post_content' => Patterns::homepage_content(),
+                    'post_status'  => 'publish',
+                    'post_type'    => 'page',
+                ),
+                true
+            );
+        } catch ( \Throwable $e ) {
+            trigger_error(
+                esc_html__( 'StaySuite Companion: homepage creation failed: ', 'staysuite-companion' ) . $e->getMessage(),
+                E_USER_WARNING
+            );
+            update_option( self::HOMEPAGE_RETRY, time() );
+            return 0;
+        }
 
         if ( is_wp_error( $page_id ) || ! $page_id ) {
+            update_option( self::HOMEPAGE_RETRY, time() );
             return 0;
         }
 
         $page_id = intval( $page_id );
         self::apply_homepage_template( $page_id );
         update_option( self::HOMEPAGE_OPTION, $page_id );
+        delete_option( self::HOMEPAGE_RETRY );
 
         return $page_id;
+    }
+
+    /**
+     * Retry a failed automatic homepage creation, throttled to hourly.
+     *
+     * Called from admin_init. A hostile save_post dispatcher fails every
+     * attempt the same way, so retrying on every admin load would only
+     * burn cycles; hourly gives the site owner time to fix or remove the
+     * conflicting code while still self-healing.
+     *
+     * @return void
+     */
+    public static function maybe_retry_homepage() {
+        $last = intval( get_option( self::HOMEPAGE_RETRY, 0 ) );
+        if ( $last <= 0 || time() - $last < HOUR_IN_SECONDS ) {
+            return;
+        }
+        update_option( self::HOMEPAGE_RETRY, time() );
+        self::maybe_create_homepage_page();
     }
 
     /**

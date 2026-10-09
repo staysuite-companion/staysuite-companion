@@ -49,6 +49,7 @@ class HomepageSetup {
     public function __construct() {
         add_action( 'admin_notices', array( $this, 'notice' ) );
         add_action( 'admin_post_' . self::ACTION, array( $this, 'apply' ) );
+        add_action( 'admin_init', array( $this, 'retry_homepage' ) );
     }
 
     /**
@@ -63,6 +64,15 @@ class HomepageSetup {
 
         $screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
         if ( is_object( $screen ) && in_array( $screen->base, array( 'dashboard', 'upload' ), true ) ) {
+            return;
+        }
+
+        if ( intval( get_option( Installer::HOMEPAGE_RETRY, 0 ) ) > 0 && '' === $this->homepage_page_link() ) {
+            $this->render_notice(
+                esc_html__( 'the "Homepage - StaySuite" page could not be created automatically — something on the site interrupted setup. Creation is retried automatically; if this persists, create a page with that title manually and pick the StaySuite Homepage template for it.', 'staysuite-companion' ),
+                null,
+                ''
+            );
             return;
         }
 
@@ -161,6 +171,22 @@ class HomepageSetup {
     private function was_applied() {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display-only flag, see docblock.
         return isset( $_GET[ self::FLAG ] );
+    }
+
+    /**
+     * Retry a homepage creation that failed during activation.
+     *
+     * Activation survives hostile save_post hooks by deferring the page
+     * instead of fatalling; this hourly retry (see Installer) finishes
+     * the job once the conflict is gone.
+     *
+     * @return void
+     */
+    public function retry_homepage() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        Installer::maybe_retry_homepage();
     }
 
     /**
