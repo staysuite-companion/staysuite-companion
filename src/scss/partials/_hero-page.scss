@@ -159,12 +159,13 @@ body.ssc-homepage .ssc-hero-subtitle,
     text-shadow: 0 2px 14px rgba(0, 0, 0, 0.5);
 }
 
-/* Group form rendered outside the cover (portalled sibling): always in
-   normal flow below the search bar, never overlapping it. The in-flow
-   card pushes following sections down; cover height stays fixed. */
+/* Group form rendered outside the cover (portalled sibling): pulled up
+   slightly to overlap the cover's bottom edge while staying below the
+   search bar (which stacks above it). The in-flow card pushes following
+   sections down; cover height stays fixed. */
 .ssc-mode-form-outside {
     max-width: 1200px;
-    margin: 32px auto 80px;
+    margin: -80px auto 80px;
     padding-left: 15px;
     padding-right: 15px;
     position: relative;
@@ -509,7 +510,7 @@ body.ssc-homepage {
 
 @media (max-width: bp.$bp-sm) {
     .ssc-mode-form-outside {
-        margin-top: 24px;
+        margin-top: -48px;
         margin-bottom: 64px;
     }
 }
