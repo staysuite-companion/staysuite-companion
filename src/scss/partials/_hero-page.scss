@@ -2,6 +2,15 @@
 
 /* ---------- Hero pages (body.ssc-has-hero) ---------- */
 
+/* Gutenberg alignfull resolves full-bleed against 100vw, which includes
+   the vertical scrollbar — so the cover bleeds a few px past the
+   viewport and the page gains an x-scroll. Clip (not hidden) contains
+   the bleed without breaking sticky descendants or the carousels'
+   inner horizontal scrolling. */
+body.ssc-homepage {
+    overflow-x: clip;
+}
+
 body.ssc-has-hero {
     /* No theme map on hero pages — the cover replaces it. */
     .header_media #gmap_wrapper {
