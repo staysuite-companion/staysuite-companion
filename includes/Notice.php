@@ -29,6 +29,13 @@ final class Notice {
     const DISMISS_META = 'ssc_theme_notice_dismissed';
 
     /**
+     * User meta key remembering the homepage-retry-notice dismissal.
+     *
+     * @var string
+     */
+    const RETRY_DISMISS_META = 'ssc_homepage_retry_dismissed';
+
+    /**
      * Nonce action for notice dismissal.
      *
      * @var string
@@ -171,10 +178,13 @@ final class Notice {
         $key = isset( $_POST['key'] ) && is_string( $_POST['key'] )
             ? sanitize_key( wp_unslash( $_POST['key'] ) )
             : '';
-        if ( 'theme' !== $key ) {
+        if ( 'theme' === $key ) {
+            update_user_meta( get_current_user_id(), self::DISMISS_META, 1 );
+        } elseif ( 'homepage' === $key ) {
+            update_user_meta( get_current_user_id(), self::RETRY_DISMISS_META, 1 );
+        } else {
             wp_send_json_error( array(), 400 );
         }
-        update_user_meta( get_current_user_id(), self::DISMISS_META, 1 );
         wp_send_json_success();
     }
 

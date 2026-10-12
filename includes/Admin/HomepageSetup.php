@@ -17,6 +17,8 @@ namespace StaySuite\Companion\Admin;
 
 use StaySuite\Companion\Frontend\PageTemplate;
 use StaySuite\Companion\Installer;
+use StaySuite\Companion\Notice;
+use StaySuite\Companion\Plugin;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -50,6 +52,7 @@ class HomepageSetup {
         add_action( 'admin_notices', array( $this, 'notice' ) );
         add_action( 'admin_post_' . self::ACTION, array( $this, 'apply' ) );
         add_action( 'admin_init', array( $this, 'retry_homepage' ) );
+        add_action( 'admin_enqueue_scripts', array( $this, 'dismiss_assets' ) );
     }
 
     /**
@@ -68,10 +71,14 @@ class HomepageSetup {
         }
 
         if ( intval( get_option( Installer::HOMEPAGE_RETRY, 0 ) ) > 0 && '' === $this->homepage_page_link() ) {
+            if ( get_user_meta( get_current_user_id(), Notice::RETRY_DISMISS_META, true ) ) {
+                return;
+            }
             $this->render_notice(
                 esc_html__( 'the "Homepage - StaySuite" page could not be created automatically — something on the site interrupted setup. Creation is retried automatically; if this persists, create a page with that title manually and pick the StaySuite Homepage template for it.', 'staysuite-companion' ),
                 null,
-                ''
+                '',
+                'homepage'
             );
             return;
         }
@@ -124,16 +131,19 @@ class HomepageSetup {
     /**
      * Render the admin notice.
      *
-     * @param string      $message Notice body.
-     * @param string|null $url     Action URL, or null when there is nothing to click.
-     * @param string      $label   Action label.
+     * @param string      $message     Notice body.
+     * @param string|null $url         Action URL, or null when there is nothing to click.
+     * @param string      $label       Action label.
+     * @param string      $dismiss_key Dismissal key for the ssc-notice script, or empty when fixed.
      * @return void
      */
-    private function render_notice( $message, $url, $label ) {
+    private function render_notice( $message, $url, $label, $dismiss_key = '' ) {
         $applied = $this->was_applied();
         printf(
-            '<div class="notice %s"><p><strong>%s</strong> %s</p>',
+            '<div class="notice %s%s"%s><p><strong>%s</strong> %s</p>',
             $applied ? 'notice-success' : 'notice-warning',
+            '' !== $dismiss_key ? ' is-dismissible' : '',
+            '' !== $dismiss_key ? ' data-ssc-dismissible="' . esc_attr( $dismiss_key ) . '"' : '',
             esc_html__( 'StaySuite:', 'staysuite-companion' ),
             $message
         );
@@ -187,6 +197,33 @@ class HomepageSetup {
             return;
         }
         Installer::maybe_retry_homepage();
+    }
+
+    /**
+     * Load the notice-dismissal script while the retry notice is live.
+     *
+     * Same handle and payload as Notice::notice_assets(); WordPress
+     * dedupes the enqueue, so both owners can ask for it safely.
+     *
+     * @return void
+     */
+    public function dismiss_assets() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        if ( intval( get_option( Installer::HOMEPAGE_RETRY, 0 ) ) <= 0 ) {
+            return;
+        }
+        if ( get_user_meta( get_current_user_id(), Notice::RETRY_DISMISS_META, true ) ) {
+            return;
+        }
+        wp_enqueue_script( 'ssc-notice', Plugin::url() . 'assets/js/ssc-notice.js', array(), Plugin::VERSION, true );
+        wp_localize_script(
+            'ssc-notice', 'sscNotice', array(
+                'ajaxurl' => admin_url( 'admin-ajax.php' ),
+                'nonce'   => wp_create_nonce( Notice::NONCE_ACTION ),
+            )
+        );
     }
 
     /**

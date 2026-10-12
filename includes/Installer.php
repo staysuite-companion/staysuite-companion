@@ -129,11 +129,13 @@ class Installer {
                 esc_html__( 'StaySuite Companion: homepage creation failed: ', 'staysuite-companion' ) . $e->getMessage(),
                 E_USER_WARNING
             );
+            self::delete_orphaned_homepage_rows();
             update_option( self::HOMEPAGE_RETRY, time() );
             return 0;
         }
 
         if ( is_wp_error( $page_id ) || ! $page_id ) {
+            self::delete_orphaned_homepage_rows();
             update_option( self::HOMEPAGE_RETRY, time() );
             return 0;
         }
@@ -163,6 +165,38 @@ class Installer {
         }
         update_option( self::HOMEPAGE_RETRY, time() );
         self::maybe_create_homepage_page();
+    }
+
+    /**
+     * Delete our own zero-ID homepage rows left by failed inserts.
+     *
+     * Against a table with broken AUTO_INCREMENT, wp_insert_post can
+     * leave behind ID 0 rows: invalid, invisible to get_posts() lookups
+     * (so the title adoption above never sees them), and fatal to
+     * core's page hierarchy walker, which exhausts memory on the Pages
+     * screen. Scoped to our exact title and post type, so nothing else
+     * is ever touched. Best effort: a failing delete must not break
+     * activation either.
+     *
+     * @return void
+     */
+    private static function delete_orphaned_homepage_rows() {
+        global $wpdb;
+        try {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery -- No core API deletes rows by an invalid ID 0.
+            $wpdb->query(
+                $wpdb->prepare(
+                    "DELETE FROM {$wpdb->posts} WHERE ID = 0 AND post_title = %s AND post_type = 'page'",
+                    self::HOMEPAGE_TITLE
+                )
+            );
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery
+        } catch ( \Throwable $e ) {
+            trigger_error(
+                esc_html__( 'StaySuite Companion: orphan cleanup failed: ', 'staysuite-companion' ) . $e->getMessage(),
+                E_USER_WARNING
+            );
+        }
     }
 
     /**
