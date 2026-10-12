@@ -19,6 +19,9 @@ function sscLinks() {
 
 export default function ProUpsell({ features }) {
     const links = sscLinks();
+    if (links.pro_active) {
+        return null;
+    }
     return (
         <PanelBody title={__('StaySuite Pro', 'staysuite-companion')} initialOpen={false}>
             <ul style={{ listStyle: 'disc', marginLeft: '18px' }}>

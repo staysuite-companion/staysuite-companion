@@ -100,16 +100,22 @@ class Installer {
     public static function maybe_create_homepage_page() {
         $page_id = intval( get_option( self::HOMEPAGE_OPTION, 0 ) );
         if ( self::is_homepage_page( $page_id ) ) {
-            self::apply_homepage_template( $page_id );
-            delete_option( self::HOMEPAGE_RETRY );
+            if ( ! self::apply_homepage_template( $page_id ) ) {
+                update_option( self::HOMEPAGE_RETRY, time() );
+            } else {
+                delete_option( self::HOMEPAGE_RETRY );
+            }
             return $page_id;
         }
 
         $page_id = self::find_homepage_page();
         if ( $page_id > 0 ) {
-            self::apply_homepage_template( $page_id );
             update_option( self::HOMEPAGE_OPTION, $page_id );
-            delete_option( self::HOMEPAGE_RETRY );
+            if ( ! self::apply_homepage_template( $page_id ) ) {
+                update_option( self::HOMEPAGE_RETRY, time() );
+            } else {
+                delete_option( self::HOMEPAGE_RETRY );
+            }
             return $page_id;
         }
 
@@ -141,9 +147,12 @@ class Installer {
         }
 
         $page_id = intval( $page_id );
-        self::apply_homepage_template( $page_id );
         update_option( self::HOMEPAGE_OPTION, $page_id );
-        delete_option( self::HOMEPAGE_RETRY );
+        if ( ! self::apply_homepage_template( $page_id ) ) {
+            update_option( self::HOMEPAGE_RETRY, time() );
+        } else {
+            delete_option( self::HOMEPAGE_RETRY );
+        }
 
         return $page_id;
     }
@@ -263,16 +272,21 @@ class Installer {
     }
 
     /**
-     * Assign the StaySuite Homepage template to a page.
+     * Assign the StaySuite Homepage template to a page, verified.
+     *
+     * Silent meta-write failures (update_post_meta returns false on a sick
+     * database) used to leave the page on the default template with no
+     * read-back makes that failure visible so callers can flag a retry.
      *
      * @param int $page_id Page ID.
-     * @return void
+     * @return bool True when the page now carries the StaySuite template.
      */
     private static function apply_homepage_template( $page_id ) {
         if ( PageTemplate::HOMEPAGE_SLUG === get_page_template_slug( $page_id ) ) {
-            return;
+            return true;
         }
         update_post_meta( $page_id, '_wp_page_template', PageTemplate::HOMEPAGE_SLUG );
+        return PageTemplate::HOMEPAGE_SLUG === get_page_template_slug( $page_id );
     }
 
     /**

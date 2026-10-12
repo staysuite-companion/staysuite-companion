@@ -67,16 +67,21 @@ final class Links {
     /**
      * URLs for wp_localize_script().
      *
-     * @return array<string,string> Link list keyed for JS.
+     * Includes the Pro presence flag, read from Pro's version constant
+     * (never from folder names) so the editor can hide Pro upsells when
+     * Pro is already installed.
+     *
+     * @return array<string,string|int> Link list keyed for JS.
      */
     public static function all() {
         return array(
-            'plugin'  => self::PLUGIN,
-            'docs'    => self::DOCS,
-            'support' => self::SUPPORT,
-            'pro'     => self::PRO,
-            'github'  => self::GITHUB,
-            'author'  => self::AUTHOR,
+            'plugin'     => self::PLUGIN,
+            'docs'       => self::DOCS,
+            'support'    => self::SUPPORT,
+            'pro'        => self::PRO,
+            'github'     => self::GITHUB,
+            'author'     => self::AUTHOR,
+            'pro_active' => defined( 'SSC_PRO_VERSION' ) ? 1 : 0,
         );
     }
 }
