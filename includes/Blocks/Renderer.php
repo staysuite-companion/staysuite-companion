@@ -553,6 +553,7 @@ class Renderer {
             ob_start();
             include $card;
             $html = (string) ob_get_clean();
+            $html = self::mark_hotel_card( $html );
             $html = self::inject_hotel_search_meta( $html, $hotel->ID );
             $html = self::inject_hotel_price_prefix( $html, $hotel->ID );
             $html = self::inject_hotel_original_price( $html, $hotel->ID );
@@ -599,6 +600,27 @@ class Renderer {
             }
         }
         return implode( ' · ', $parts );
+    }
+
+    /**
+     * Tag the theme card wrapper as a hotel card.
+     *
+     * Gives the plugin stylesheet a hotel-only hook for fixed image
+     * framing, so missing cropped thumbnails (staging/migrated uploads
+     * falling back to full-size source) cannot stretch the card. Scoped
+     * to the first wrapper so theme listing cards are untouched.
+     *
+     * @param string $card_html Theme card HTML.
+     * @return string Card HTML with the hotel marker class.
+     */
+    public static function mark_hotel_card( $card_html ) {
+        $marked = preg_replace(
+            '#class="listing_wrapper\b#',
+            'class="listing_wrapper ssc-hotel-card',
+            $card_html,
+            1
+        );
+        return is_string( $marked ) ? $marked : $card_html;
     }
 
     /**

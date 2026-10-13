@@ -9,6 +9,36 @@
     }
 }
 
+/* Hotel cards keep a fixed image frame even when the cropped thumbnail
+   is missing and the theme falls back to the full-size source
+   (staging/migrated uploads). 400/314 matches the theme's
+   wpestate_property_listings hard crop. Theme listing cards are
+   untouched — the marker class is added in Renderer::mark_hotel_card(). */
+.ssc-hotel-card .listing-unit-img-wrapper {
+    aspect-ratio: 400 / 314;
+    overflow: hidden;
+}
+
+.ssc-hotel-card .listing-unit-img-wrapper > a:not(.owner_thumb),
+.ssc-hotel-card .listing-unit-img-wrapper .carousel-inner .item > a {
+    display: block;
+    height: 100%;
+}
+
+.ssc-hotel-card .listing-unit-img-wrapper .property_unit_carousel,
+.ssc-hotel-card .listing-unit-img-wrapper .carousel-inner,
+.ssc-hotel-card .listing-unit-img-wrapper .carousel-inner .item,
+.ssc-hotel-card .listing-unit-img-wrapper img {
+    width: 100%;
+    height: 100%;
+}
+
+.ssc-hotel-card .listing-unit-img-wrapper img {
+    width: 100%;
+    aspect-ratio: 400 / 314;
+    object-fit: cover;
+}
+
 /* Hotel cards show the lowest room price, so it reads as a starting price. */
 .ssc-price-from {
     font-size: 12px;
