@@ -34,10 +34,12 @@ export default function mountSubmitCta() {
     if (!anchor) {
         return;
     }
+    // Inside the padded login wrapper (not before it) so the link inherits
+    // the drawer's side inset and clears the absolute close button.
     const link = document.createElement('a');
     link.href = config.url;
     link.className = 'ssc-mobile-submit';
     link.setAttribute('data-ssc-submit', '1');
     link.textContent = config.label;
-    anchor.before(link);
+    anchor.prepend(link);
 }
