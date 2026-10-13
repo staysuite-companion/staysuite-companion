@@ -175,8 +175,6 @@ body.ssc-homepage .ssc-hero-subtitle,
 .ssc-mode-form-outside {
     max-width: 1200px;
     margin: -80px auto 80px;
-    padding-left: 15px;
-    padding-right: 15px;
     position: relative;
     z-index: 60;
 }
@@ -519,7 +517,7 @@ body.ssc-homepage {
 
 @media (max-width: bp.$bp-sm) {
     .ssc-mode-form-outside {
-        margin-top: -48px;
+        margin-top: -160px;
         margin-bottom: 64px;
     }
 }
@@ -582,7 +580,7 @@ body.ssc-homepage {
         }
 
         .ssc-hero-inner {
-            padding-top: 12px;
+            padding-top: 60px;
         }
     }
 
