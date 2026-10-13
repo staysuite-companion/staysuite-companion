@@ -40,6 +40,18 @@ class Renderer {
     );
 
     /**
+     * Post IDs already shown by a carousel row in this request.
+     *
+     * Rows share this so a later row never repeats a hotel or room
+     * shown above it. Post IDs are unique across post types, so one
+     * list covers both sources. Request-scoped: a fresh page load
+     * starts empty.
+     *
+     * @var int[]
+     */
+    private static $shown_ids = array();
+
+    /**
      * Render category / city tablets.
      *
      * @param array<string,mixed> $atts Normalized attributes.
@@ -221,6 +233,10 @@ class Renderer {
     /**
      * Render a listing carousel row (rooms or hotels).
      *
+     * Rows on the same page never repeat a post: every rendered ID is
+     * remembered (see $shown_ids) and later rows exclude those IDs from
+     * both selection and display.
+     *
      * @param array<string,mixed> $atts Normalized attributes.
      * @return string Carousel HTML.
      */
@@ -284,6 +300,38 @@ class Renderer {
     }
 
     /**
+     * Filter a hand-picked ID list down to posts not shown yet.
+     *
+     * @param int[] $ids Picked post IDs, in order.
+     * @return int[] Unseen IDs, in picked order.
+     */
+    private static function unseen_ids( $ids ) {
+        $fresh = array();
+        foreach ( $ids as $id ) {
+            $id = intval( $id );
+            if ( $id > 0 && ! in_array( $id, self::$shown_ids, true ) && ! in_array( $id, $fresh, true ) ) {
+                $fresh[] = $id;
+            }
+        }
+        return $fresh;
+    }
+
+    /**
+     * Remember rendered post IDs so later rows skip them.
+     *
+     * @param int[] $ids Rendered post IDs.
+     * @return void
+     */
+    private static function remember_ids( $ids ) {
+        foreach ( $ids as $id ) {
+            $id = intval( $id );
+            if ( $id > 0 && ! in_array( $id, self::$shown_ids, true ) ) {
+                self::$shown_ids[] = $id;
+            }
+        }
+    }
+
+    /**
      * Build the rooms query for a carousel.
      *
      * @param array<string,mixed> $atts Normalized carousel attributes.
@@ -299,10 +347,15 @@ class Renderer {
             'ssc_room_lookup' => true,
         );
         if ( ! empty( $atts['include_ids'] ) ) {
-            // Hand-picked posts override every filter and ordering.
-            $args['post__in'] = $atts['include_ids'];
+            // Hand-picked posts override every filter and ordering, but
+            // never repeat posts an earlier row already showed.
+            $fresh = self::unseen_ids( $atts['include_ids'] );
+            $args['post__in'] = $fresh !== array() ? $fresh : array( 0 );
             $args['orderby'] = 'post__in';
             return new WP_Query( $args );
+        }
+        if ( self::$shown_ids !== array() ) {
+            $args['post__not_in'] = self::$shown_ids;
         }
         $tax_query = array();
         if ( $atts['taxonomy'] !== '' && $atts['term'] !== '' && taxonomy_exists( $atts['taxonomy'] ) ) {
@@ -376,7 +429,12 @@ class Renderer {
         $html = '';
         while ( $query->have_posts() ) {
             $query->the_post();
-            $html .= self::render_room_card( get_the_ID() );
+            $room_id = intval( get_the_ID() );
+            if ( $room_id <= 0 || in_array( $room_id, self::$shown_ids, true ) ) {
+                continue;
+            }
+            $html .= self::render_room_card( $room_id );
+            self::remember_ids( array( $room_id ) );
         }
         wp_reset_postdata();
         return $html;
@@ -452,10 +510,15 @@ class Renderer {
             'no_found_rows'  => true,
         );
         if ( ! empty( $atts['include_ids'] ) ) {
-            // Hand-picked posts override every filter and ordering.
-            $args['post__in'] = $atts['include_ids'];
+            // Hand-picked posts override every filter and ordering, but
+            // never repeat posts an earlier row already showed.
+            $fresh = self::unseen_ids( $atts['include_ids'] );
+            $args['post__in'] = $fresh !== array() ? $fresh : array( 0 );
             $args['orderby'] = 'post__in';
             return new WP_Query( $args );
+        }
+        if ( self::$shown_ids !== array() ) {
+            $args['post__not_in'] = self::$shown_ids;
         }
         if ( $atts['order'] === 'rand' ) {
             $args['orderby'] = 'rand';
@@ -514,7 +577,12 @@ class Renderer {
         $html = '';
         while ( $query->have_posts() ) {
             $query->the_post();
-            $html .= self::render_hotel_card( get_the_ID() );
+            $hotel_id = intval( get_the_ID() );
+            if ( $hotel_id <= 0 || in_array( $hotel_id, self::$shown_ids, true ) ) {
+                continue;
+            }
+            $html .= self::render_hotel_card( $hotel_id );
+            self::remember_ids( array( $hotel_id ) );
         }
         wp_reset_postdata();
         return $html;
