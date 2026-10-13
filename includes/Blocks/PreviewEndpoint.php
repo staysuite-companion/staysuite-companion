@@ -197,7 +197,7 @@ class PreviewEndpoint {
             }
             $options[] = array(
 				'slug'  => $term->slug,
-				'name'  => $term->name,
+				'name'  => html_entity_decode( $term->name, ENT_QUOTES, 'UTF-8' ),
 				'count' => isset( $counts[ intval( $term->term_id ) ] ) ? intval( $counts[ intval( $term->term_id ) ] ) : 0,
             );
         }
@@ -282,9 +282,11 @@ class PreviewEndpoint {
                 // translators: %d: post ID.
                 $title = sprintf( esc_html__( 'Untitled #%d', 'staysuite-companion' ), $id );
             }
+            // Titles may carry DB-stored entities (Cox&#8217;s); the editor
+            // renders option labels as text, so decode to real characters.
             $options[] = array(
 				'id'    => $id,
-				'title' => $title,
+				'title' => html_entity_decode( $title, ENT_QUOTES, 'UTF-8' ),
             );
         }
         return $options;

@@ -3,7 +3,7 @@
  */
 import { registerBlockType } from '@wordpress/blocks';
 import { InspectorControls } from '@wordpress/block-editor';
-import { PanelBody, SelectControl, RangeControl, ToggleControl, TextControl } from '@wordpress/components';
+import { PanelBody, SelectControl, RangeControl, ToggleControl, TextControl, Button } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useEffect, useState } from 'react';
 import apiFetch from '@wordpress/api-fetch';
@@ -56,7 +56,19 @@ registerBlockType('ssc/listing-carousel', {
     edit({ attributes, setAttributes }) {
         const set = (key) => (value) => setAttributes({ [key]: value });
         const { terms, posts } = useCarouselOptions(attributes.taxonomy, attributes.source);
-        const hasHandPicked = attributes.include_ids !== '';
+        // Stored as CSV (existing blocks); the picker adds/removes one at a
+        // time, mirroring the Term Tablets hand-picked terms control.
+        const pickedIds = attributes.include_ids === '' ? [] : attributes.include_ids.split(',');
+        const hasHandPicked = pickedIds.length > 0;
+        // The attribute stores IDs; titles are display-only.
+        const titleById = {};
+        posts.forEach((p) => {
+            const key = String(p.id);
+            if (!titleById[key]) {
+                titleById[key] = p.title;
+            }
+        });
+        const removeId = (id) => setAttributes({ include_ids: pickedIds.filter((v) => v !== id).join(',') });
 
         return (
             <>
@@ -78,14 +90,46 @@ registerBlockType('ssc/listing-carousel', {
                         />
                         <SelectControl
                             label={__('Hand-picked', 'staysuite-companion')}
-                            help={__('Optional single post from the selected source. Shows only this post; the filters below are hidden while set.', 'staysuite-companion')}
-                            value={attributes.include_ids}
+                            help={__('Pick posts one at a time from the dropdown. Shows only these, in the order picked; the filters below are hidden while set.', 'staysuite-companion')}
+                            value=""
                             options={[
-                                { label: __('None', 'staysuite-companion'), value: '' },
-                                ...posts.map((p) => ({ label: p.title, value: String(p.id) })),
+                                { label: __('Choose a post to add…', 'staysuite-companion'), value: '' },
+                                ...posts
+                                    .filter((p) => !pickedIds.includes(String(p.id)))
+                                    .map((p) => ({ label: p.title, value: String(p.id) })),
                             ]}
-                            onChange={set('include_ids')}
+                            onChange={(id) => {
+                                if (id !== '' && !pickedIds.includes(id)) {
+                                    setAttributes({ include_ids: [...pickedIds, id].join(',') });
+                                }
+                            }}
                         />
+                        {hasHandPicked && (
+                            <ul style={{ listStyle: 'none', margin: '0 0 16px' }}>
+                                {pickedIds.map((id) => (
+                                    <li
+                                        key={id}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            gap: '8px',
+                                            padding: '4px 0',
+                                        }}
+                                    >
+                                        <span>{titleById[id] || `#${id}`}</span>
+                                        <Button
+                                            isSmall
+                                            isLink
+                                            isDestructive
+                                            onClick={() => removeId(id)}
+                                        >
+                                            {__('Remove', 'staysuite-companion')}
+                                        </Button>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                         {!hasHandPicked && (
                             <>
                                 <SelectControl
