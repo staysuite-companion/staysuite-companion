@@ -206,6 +206,98 @@
     margin-left: 20px;
 }
 
+/* Multiselect dropdown (settings page pickers). Button shows the
+   selected count; the panel holds checkbox rows and closes on
+   outside click (see the component in src/admin.js). */
+.ssc-multiselect {
+    position: relative;
+    max-width: 480px;
+
+    > button {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+}
+
+/* Select2-style box: selected pages as inline pills, caret at right. */
+.ssc-multiselect-box {
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    background: #fff;
+    min-height: 30px;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.ssc-multiselect-placeholder {
+    color: #757575;
+    flex: 1;
+}
+
+.ssc-multiselect-tokens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    flex: 1;
+}
+
+.ssc-token {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #f0f0f1;
+    border: 1px solid #dcdcde;
+    border-radius: 3px;
+    padding: 2px 4px 2px 8px;
+    font-size: 13px;
+
+    button {
+        border: 0;
+        background: none;
+        cursor: pointer;
+        color: #787c82;
+        font-size: 14px;
+        line-height: 1;
+        padding: 0 2px;
+
+        &:hover {
+            color: #d63638;
+        }
+    }
+}
+
+.ssc-multiselect-caret {
+    color: #757575;
+    flex-shrink: 0;
+}
+
+.ssc-multiselect-search {
+    width: 100%;
+    margin-bottom: 6px;
+}
+
+.ssc-multiselect-drop {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: #fff;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    max-height: 220px;
+    overflow: auto;
+    padding: 8px 12px;
+    margin-top: 4px;
+}
+
 .ssc-confirm-backdrop {
     position: fixed;
     inset: 0;

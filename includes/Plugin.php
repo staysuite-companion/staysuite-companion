@@ -287,6 +287,7 @@ final class Plugin {
         $this->container['room_single']     = new RoomSingleLink();
         $this->container['card_badge']      = new CardBadge();
         $this->container['scripts']         = new Scripts();
+        $this->container['header_map']      = new Frontend\HeaderMap();
         $this->container['page_setup']      = new Frontend\PageSetup();
         $this->container['settings']        = new Admin\Settings();
         $this->container['search_scope']    = new SearchScope();

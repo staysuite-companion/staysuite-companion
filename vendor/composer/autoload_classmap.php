@@ -75,6 +75,7 @@ return array(
     'StaySuite\\Companion\\Booking\\QuoteForm' => $baseDir . '/includes/Booking/QuoteForm.php',
     'StaySuite\\Companion\\Booking\\RequestCPT' => $baseDir . '/includes/Booking/RequestCPT.php',
     'StaySuite\\Companion\\Frontend\\CardBadge' => $baseDir . '/includes/Frontend/CardBadge.php',
+    'StaySuite\\Companion\\Frontend\\HeaderMap' => $baseDir . '/includes/Frontend/HeaderMap.php',
     'StaySuite\\Companion\\Frontend\\InvoiceEmail' => $baseDir . '/includes/Frontend/InvoiceEmail.php',
     'StaySuite\\Companion\\Frontend\\PageSetup' => $baseDir . '/includes/Frontend/PageSetup.php',
     'StaySuite\\Companion\\Frontend\\PageTemplate' => $baseDir . '/includes/Frontend/PageTemplate.php',

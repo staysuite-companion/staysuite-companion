@@ -71,6 +71,7 @@ class Settings {
             'confirmation_auto'   => 1,
             'confirmation_notes'  => '',
             'mobile_submit'       => 1,
+            'hide_map_pages'      => array(),
         );
     }
 
@@ -96,6 +97,7 @@ class Settings {
         $all['confirmation_auto'] = ! empty( $all['confirmation_auto'] ) ? 1 : 0;
         $all['confirmation_notes'] = isset( $all['confirmation_notes'] ) ? sanitize_textarea_field( $all['confirmation_notes'] ) : '';
         $all['mobile_submit'] = ! empty( $all['mobile_submit'] ) ? 1 : 0;
+        $all['hide_map_pages'] = self::id_list( $all['hide_map_pages'] ?? array() );
         if ( $key === null ) {
             return $all;
         }
@@ -144,7 +146,34 @@ class Settings {
             'confirmation_auto' => ! empty( $raw['confirmation_auto'] ) ? 1 : 0,
             'confirmation_notes' => isset( $raw['confirmation_notes'] ) ? sanitize_textarea_field( $raw['confirmation_notes'] ) : '',
             'mobile_submit' => ! empty( $raw['mobile_submit'] ) ? 1 : 0,
+            'hide_map_pages' => self::id_list( $raw['hide_map_pages'] ?? array() ),
         );
+    }
+
+    /**
+     * Normalize a raw ID list to positive ints (deduped, capped).
+     *
+     * @param mixed $value Raw value.
+     * @return int[] Clean post IDs.
+     */
+    private static function id_list( $value ) {
+        if ( is_string( $value ) ) {
+            $value = explode( ',', $value );
+        }
+        if ( ! is_array( $value ) ) {
+            return array();
+        }
+        $ids = array();
+        foreach ( $value as $id ) {
+            $id = intval( $id );
+            if ( $id > 0 && ! in_array( $id, $ids, true ) ) {
+                $ids[] = $id;
+            }
+            if ( count( $ids ) >= 200 ) {
+                break;
+            }
+        }
+        return $ids;
     }
 
     /**

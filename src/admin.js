@@ -125,6 +125,124 @@ function Row({ label, hint, children }) {
     );
 }
 
+function decodeTitle(raw) {
+    const text = raw && typeof raw === 'object' && typeof raw.rendered === 'string' ? raw.rendered : raw;
+    if (typeof text !== 'string' || text === '') {
+        return '';
+    }
+    const el = document.createElement('textarea');
+    el.innerHTML = text;
+    return el.value;
+}
+
+function usePages() {
+    const [pages, setPages] = useState(null);
+    useEffect(() => {
+        apiFetch({ path: '/wp/v2/pages?per_page=100&orderby=title&order=asc&_fields=id,title,link' })
+            .then((res) => setPages(Array.isArray(res) ? res : []))
+            .catch(() => setPages([]));
+    }, []);
+    return pages;
+}
+
+function PageMapToggles({ settings, set }) {
+    const pages = usePages();
+    const [open, setOpen] = useState(false);
+    const [query, setQuery] = useState('');
+    const picked = Array.isArray(settings.hide_map_pages) ? settings.hide_map_pages : [];
+    useEffect(() => {
+        if (!open) {
+            return undefined;
+        }
+        const close = (event) => {
+            if (!event.target.closest('.ssc-multiselect')) {
+                setOpen(false);
+            }
+        };
+        document.addEventListener('click', close);
+        return () => document.removeEventListener('click', close);
+    }, [open ]);
+    if (pages === null) {
+        return <p>{__('Loading pages…', 'staysuite-companion')}</p>;
+    }
+    if (pages.length === 0) {
+        return <p>{__('No pages found.', 'staysuite-companion')}</p>;
+    }
+    // The setting stores IDs; titles are display-only.
+    const titleById = {};
+    pages.forEach((p) => {
+        if (!titleById[p.id]) {
+            titleById[p.id] = decodeTitle(p.title) || `#${p.id}`;
+        }
+    });
+    const toggle = (id) => {
+        set('hide_map_pages')(picked.includes(id) ? picked.filter((v) => v !== id) : [...picked, id]);
+    };
+    const removeId = (id) => set('hide_map_pages')(picked.filter((v) => v !== id));
+    const needle = query.trim().toLowerCase();
+    const visible = needle === '' ? pages : pages.filter((p) => titleById[p.id].toLowerCase().includes(needle));
+    return (
+        <div className="ssc-multiselect">
+            <div
+                className="ssc-multiselect-box"
+                role="combobox"
+                aria-expanded={open}
+                tabIndex={0}
+                onClick={() => setOpen(!open)}
+                onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setOpen(!open);
+                    }
+                }}
+            >
+                {picked.length === 0 ? (
+                    <span className="ssc-multiselect-placeholder">{__('Select pages…', 'staysuite-companion')}</span>
+                ) : (
+                    <span className="ssc-multiselect-tokens">
+                        {picked.map((id) => (
+                            <span key={id} className="ssc-token">
+                                {titleById[id] || `#${id}`}
+                                <button
+                                    type="button"
+                                    aria-label={__('Remove', 'staysuite-companion')}
+                                    onClick={(event) => {
+                                        event.stopPropagation();
+                                        removeId(id);
+                                    }}
+                                >
+                                    ×
+                                </button>
+                            </span>
+                        ))}
+                    </span>
+                )}
+                <span aria-hidden="true" className="ssc-multiselect-caret">▾</span>
+            </div>
+            {open && (
+                <div className="ssc-multiselect-drop">
+                    <input
+                        type="search"
+                        className="ssc-multiselect-search"
+                        placeholder={__('Search pages…', 'staysuite-companion')}
+                        value={query}
+                        onChange={(event) => setQuery(event.target.value)}
+                    />
+                    {visible.map((p) => (
+                        <Check
+                            key={p.id}
+                            label={titleById[p.id]}
+                            checked={picked.includes(p.id)}
+                            onChange={() => toggle(p.id)}
+                        />
+                    ))}
+                    {visible.length === 0 && <p>{__('No matching pages.', 'staysuite-companion')}</p>}
+                </div>
+            )}
+        </div>
+    );
+}
+
 function SettingsTab() {
     const { settings, setSettings, save, feedback } = useSettings();
     const [confirmDelete, setConfirmDelete] = useState(false);
@@ -245,6 +363,12 @@ function SettingsTab() {
                     checked={settings.mobile_submit}
                     onChange={set('mobile_submit')}
                 />
+            </Row>
+            <Row
+                label={__('Hide header map', 'staysuite-companion')}
+                hint={__('Tick pages where the theme must not show its Google Map header — typically the WooCommerce Cart and Checkout pages. Works without editing those pages’ own header options, and also keeps the Maps scripts off them.', 'staysuite-companion')}
+            >
+                <PageMapToggles settings={settings} set={set} />
             </Row>
             <h2>{__('Search colors', 'staysuite-companion')}</h2>
             <Row label={__('Color source', 'staysuite-companion')}>
